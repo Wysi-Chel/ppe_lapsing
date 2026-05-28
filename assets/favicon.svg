@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="PPE favicon">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4dd0e1"/>
+      <stop offset="1" stop-color="#1b88ff"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#bg)"/>
+  <rect x="17" y="23" width="8" height="19" rx="2" fill="#f6fbff"/>
+  <rect x="28" y="16" width="8" height="26" rx="2" fill="#f6fbff"/>
+  <rect x="39" y="28" width="8" height="14" rx="2" fill="#f6fbff"/>
+  <path d="M16 48h32" stroke="#ffc857" stroke-linecap="round" stroke-width="4"/>
+</svg>

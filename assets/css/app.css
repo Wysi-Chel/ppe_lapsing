@@ -365,6 +365,12 @@ body {
     box-shadow: none;
 }
 
+.form-select option,
+.form-select optgroup {
+    color: #08131d;
+    background-color: #f6fbff;
+}
+
 .form-control::placeholder {
     color: rgba(255, 255, 255, 0.45);
 }

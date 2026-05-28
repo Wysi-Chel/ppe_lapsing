@@ -11,11 +11,11 @@ declare(strict_types=1);
     <div class="row g-3">
         <div class="col-md-6">
             <label class="form-label" for="asset_code">Asset code</label>
-            <input class="form-control" id="asset_code" name="asset_code" value="<?= e((string) ($form['asset_code'] ?? '')) ?>" placeholder="PPE-2026-001" required>
+            <input class="form-control" id="asset_code" name="asset_code" value="<?= e((string) ($form['asset_code'] ?? '')) ?>" placeholder="" required>
         </div>
         <div class="col-md-6">
             <label class="form-label" for="asset_name">Asset name</label>
-            <input class="form-control" id="asset_name" name="asset_name" value="<?= e((string) ($form['asset_name'] ?? '')) ?>" placeholder="Acer TravelMate Laptop" required>
+            <input class="form-control" id="asset_name" name="asset_name" value="<?= e((string) ($form['asset_name'] ?? '')) ?>" placeholder="" required>
         </div>
         <div class="col-md-6">
             <label class="form-label" for="category_id">Category</label>
@@ -23,7 +23,7 @@ declare(strict_types=1);
                 <option value="">Select a category</option>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?= e((string) $category['category_id']) ?>" <?= selected_if($form['category_id'] ?? '', $category['category_id']) ?>>
-                        <?= e($category['category_name']) ?> (default life: <?= e((string) $category['default_useful_life']) ?> years)
+                        <?= e($category['category_name']) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -69,11 +69,11 @@ declare(strict_types=1);
         </div>
         <div class="col-md-6">
             <label class="form-label" for="location">Location</label>
-            <input class="form-control" id="location" name="location" value="<?= e((string) ($form['location'] ?? '')) ?>" placeholder="Admin Office">
+            <input class="form-control" id="location" name="location" value="<?= e((string) ($form['location'] ?? '')) ?>" placeholder="">
         </div>
         <div class="col-md-6">
             <label class="form-label" for="remarks">Remarks</label>
-            <input class="form-control" id="remarks" name="remarks" value="<?= e((string) ($form['remarks'] ?? '')) ?>" placeholder="Used for encoding reports">
+            <input class="form-control" id="remarks" name="remarks" value="<?= e((string) ($form['remarks'] ?? '')) ?>" placeholder="">
         </div>
         <div class="col-12 d-flex flex-wrap gap-2 pt-2">
             <button class="btn btn-primary" type="submit">

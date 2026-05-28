@@ -5,7 +5,7 @@ declare(strict_types=1);
                 </main>
                 <footer class="app-footer">
                     <span><?= e(APP_NAME) ?></span>
-                    <span>Straight-line depreciation, asset records, and analysis reports.</span>
+                    <span></span>
                 </footer>
             </div>
         </div>

@@ -15,7 +15,7 @@ function fetch_users(PDO $pdo): array
 
 function fetch_categories(PDO $pdo): array
 {
-    $statement = $pdo->query('SELECT category_id, category_name, default_useful_life FROM categories ORDER BY category_name');
+    $statement = $pdo->query('SELECT category_id, category_name FROM categories ORDER BY category_name');
 
     return $statement->fetchAll() ?: [];
 }
@@ -37,7 +37,7 @@ function fetch_asset_lookup(PDO $pdo): array
 function fetch_asset_by_id(PDO $pdo, int $assetId): ?array
 {
     $statement = $pdo->prepare(
-        'SELECT a.*, c.category_name, c.default_useful_life, d.department_name
+        'SELECT a.*, c.category_name, d.department_name
          FROM assets a
          LEFT JOIN categories c ON c.category_id = a.category_id
          LEFT JOIN departments d ON d.department_id = a.department_id
@@ -52,7 +52,7 @@ function fetch_asset_by_id(PDO $pdo, int $assetId): ?array
 
 function fetch_assets(PDO $pdo, array $filters = []): array
 {
-    $sql = 'SELECT a.*, c.category_name, c.default_useful_life, d.department_name
+    $sql = 'SELECT a.*, c.category_name, d.department_name
             FROM assets a
             LEFT JOIN categories c ON c.category_id = a.category_id
             LEFT JOIN departments d ON d.department_id = a.department_id

@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Add Asset';
 $pageHeading = 'Add PPE Asset';
-$pageDescription = 'Capture the master record first, then the system will build the straight-line lapsing schedule automatically.';
 $submitLabel = 'Save Asset';
 $cancelUrl = 'modules/assets.php';
 
@@ -48,7 +47,6 @@ require_once APP_ROOT . '/includes/header.php';
             <div class="mb-4">
                 <p class="eyebrow mb-2">Asset setup</p>
                 <h2 class="section-title mb-2">Record a new PPE item</h2>
-                <p class="section-subtitle">Use the category default as a guide, then confirm the actual useful life and salvage value before saving.</p>
             </div>
             <?php require APP_ROOT . '/includes/asset_form.php'; ?>
         </section>
