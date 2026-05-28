@@ -17,8 +17,8 @@ if (can_manage_users()) {
     <div class="brand-block">
         <div class="brand-mark">PPE</div>
         <div>
-            <p class="brand-kicker mb-1">Accounting workspace</p>
-            <h2 class="brand-title mb-0">Lapsing Control Center</h2>
+            <p class="brand-kicker mb-1">Fixed asset records</p>
+            <h2 class="brand-title mb-0">PPE Lapsing System</h2>
         </div>
     </div>
 

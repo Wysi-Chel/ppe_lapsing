@@ -13,7 +13,7 @@ $recentAnalyses = fetch_ai_analysis_history($pdo, 3);
 
 $pageTitle = 'Dashboard';
 $pageHeading = 'PPE Dashboard';
-$pageDescription = 'A quick view of cost, depreciation, carrying amount, and emerging asset risks.';
+$pageDescription = 'View total cost, depreciation, carrying amount, and items that may need review.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -68,8 +68,8 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <p class="eyebrow mb-2">AI-style risk summary</p>
-                        <h2 class="section-title mb-0">Current portfolio picture</h2>
+                        <p class="eyebrow mb-2">Summary</p>
+                        <h2 class="section-title mb-0">Current asset status</h2>
                     </div>
                     <?php if (can_manage_assets()): ?>
                         <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
@@ -83,8 +83,8 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <p class="eyebrow mb-2">Latest activity</p>
-                        <h2 class="section-title mb-0">Recent assets</h2>
+                        <p class="eyebrow mb-2">Assets</p>
+                        <h2 class="section-title mb-0">Recent records</h2>
                     </div>
                     <a class="btn btn-outline-light" href="<?= e(base_url('modules/assets.php')) ?>">View all assets</a>
                 </div>
@@ -124,7 +124,7 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <p class="eyebrow mb-2">Mix overview</p>
+                        <p class="eyebrow mb-2">Categories</p>
                         <h2 class="section-title mb-0">Assets by category</h2>
                     </div>
                     <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/reports.php')) ?>">Full report</a>
@@ -150,8 +150,8 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <p class="eyebrow mb-2">Recent insights</p>
-                        <h2 class="section-title mb-0">Saved analyses</h2>
+                        <p class="eyebrow mb-2">Analysis</p>
+                        <h2 class="section-title mb-0">Saved reports</h2>
                     </div>
                     <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/ai_analysis.php')) ?>">Open AI module</a>
                 </div>

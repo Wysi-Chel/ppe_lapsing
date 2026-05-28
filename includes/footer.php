@@ -5,7 +5,7 @@ declare(strict_types=1);
                 </main>
                 <footer class="app-footer">
                     <span><?= e(APP_NAME) ?></span>
-                    <span>Built for straight-line depreciation and practical PPE review.</span>
+                    <span>Straight-line depreciation, asset records, and analysis reports.</span>
                 </footer>
             </div>
         </div>

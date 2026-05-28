@@ -30,7 +30,7 @@ $showShell = $loggedInUser !== null;
             <div class="main-stage">
                 <header class="topbar">
                     <div>
-                        <p class="eyebrow mb-2">PPE lifecycle intelligence</p>
+                        <p class="eyebrow mb-2">PPE management system</p>
                         <h1 class="page-title mb-1"><?= e($pageHeading) ?></h1>
                         <p class="page-description mb-0"><?= e($pageDescription) ?></p>
                     </div>

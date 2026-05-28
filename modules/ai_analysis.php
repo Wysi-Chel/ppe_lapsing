@@ -37,8 +37,8 @@ $latestAnalysis = $history[0] ?? null;
 $hasApiKey = get_openai_api_key() !== '';
 
 $pageTitle = 'AI Analysis';
-$pageHeading = 'AI Analysis Workspace';
-$pageDescription = 'Turn PPE balances and record quality findings into a readable narrative for management or audit review.';
+$pageHeading = 'AI Analysis';
+$pageDescription = 'Review the generated PPE report and the asset data used to create it.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -46,12 +46,12 @@ require_once APP_ROOT . '/includes/header.php';
     <section class="metric-card">
         <p class="metric-label mb-2">Configured Model</p>
         <h2 class="metric-value mb-1"><?= e(OPENAI_MODEL) ?></h2>
-        <p class="metric-meta mb-0">Used when OPENAI_API_KEY is available</p>
+        <p class="metric-meta mb-0">Used when an OpenAI API key is available</p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">API Key Status</p>
         <h2 class="metric-value mb-1"><?= $hasApiKey ? 'Ready' : 'Missing' ?></h2>
-        <p class="metric-meta mb-0"><?= $hasApiKey ? 'Live OpenAI analysis can be requested.' : 'Local fallback analysis will still work.' ?></p>
+        <p class="metric-meta mb-0"><?= $hasApiKey ? 'OpenAI report generation is available.' : 'The local fallback report will still work.' ?></p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">Saved Analyses</p>
@@ -61,7 +61,7 @@ require_once APP_ROOT . '/includes/header.php';
     <section class="metric-card">
         <p class="metric-label mb-2">Flagged Assets</p>
         <h2 class="metric-value mb-1"><?= e((string) count($alerts['unusual'])) ?></h2>
-        <p class="metric-meta mb-0">Potentially unusual records in the current dataset</p>
+        <p class="metric-meta mb-0">Records that may need closer review</p>
     </section>
 </div>
 
@@ -69,8 +69,8 @@ require_once APP_ROOT . '/includes/header.php';
     <div class="col-lg-5">
         <section class="shell-card mb-4">
             <div class="mb-3">
-                <p class="eyebrow mb-2">Analysis input</p>
-                <h2 class="section-title mb-0">Snapshot sent to AI</h2>
+                <p class="eyebrow mb-2">Input data</p>
+                <h2 class="section-title mb-0">Data used for the report</h2>
             </div>
             <textarea class="form-control" rows="18" readonly><?= e($snapshot) ?></textarea>
             <form method="post" class="mt-3">
@@ -82,8 +82,8 @@ require_once APP_ROOT . '/includes/header.php';
 
         <section class="shell-card">
             <div class="mb-3">
-                <p class="eyebrow mb-2">What gets checked</p>
-                <h2 class="section-title mb-0">Analysis focus areas</h2>
+                <p class="eyebrow mb-2">Checks</p>
+                <h2 class="section-title mb-0">Items reviewed</h2>
             </div>
             <div class="list-panel">
                 <div class="list-row"><strong>PPE summary</strong><p class="text-soft small mb-0">Total cost, accumulated depreciation, and current carrying amount.</p></div>
@@ -98,7 +98,7 @@ require_once APP_ROOT . '/includes/header.php';
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="eyebrow mb-2">Latest result</p>
-                    <h2 class="section-title mb-0">Saved narrative</h2>
+                    <h2 class="section-title mb-0">Saved report</h2>
                 </div>
                 <?php if ($latestAnalysis): ?>
                     <span class="badge <?= e(analysis_badge_class((string) $latestAnalysis['analysis_type'])) ?>"><?= e($latestAnalysis['analysis_type']) ?></span>
@@ -118,8 +118,8 @@ require_once APP_ROOT . '/includes/header.php';
 
         <section class="shell-card">
             <div class="mb-3">
-                <p class="eyebrow mb-2">Recent history</p>
-                <h2 class="section-title mb-0">Previous analyses</h2>
+                <p class="eyebrow mb-2">History</p>
+                <h2 class="section-title mb-0">Previous reports</h2>
             </div>
 
             <?php if ($history === []): ?>

@@ -42,37 +42,37 @@ require_once APP_ROOT . '/includes/header.php';
         <div>
             <span class="auth-kicker">
                 <i class="bi bi-stars"></i>
-                Straight-line depreciation with AI commentary
+                Straight-line depreciation system
             </span>
-            <h1 class="auth-title">Stay ahead of aging assets before the spreadsheet does.</h1>
+            <h1 class="auth-title">Track PPE records, depreciation, and analysis in one place.</h1>
             <p class="auth-copy mb-0">
-                Track acquisition cost, useful life, carrying amount, and risk signals in one focused PPE workspace for admins, accounting staff, and auditors.
+                Manage acquisition cost, useful life, carrying amount, and review notes for admins, accounting staff, and auditors.
             </p>
         </div>
 
         <div class="feature-grid">
             <article class="feature-card">
-                <strong>Live asset picture</strong>
-                <p class="feature-copy mb-0">See total PPE cost, accumulated depreciation, near-end assets, and category mix from one dashboard.</p>
+                <strong>Dashboard summary</strong>
+                <p class="feature-copy mb-0">View total PPE cost, accumulated depreciation, near-end assets, and category totals from one dashboard.</p>
             </article>
             <article class="feature-card">
-                <strong>Automatic lapsing schedule</strong>
-                <p class="feature-copy mb-0">Generate year-by-year straight-line depreciation without hand-building each schedule.</p>
+                <strong>Depreciation schedule</strong>
+                <p class="feature-copy mb-0">Generate year-by-year straight-line depreciation without preparing each schedule manually.</p>
             </article>
             <article class="feature-card">
-                <strong>Cleaner audit review</strong>
-                <p class="feature-copy mb-0">Spot unusual salvage values, fully depreciated active assets, and missing setup details faster.</p>
+                <strong>Record review</strong>
+                <p class="feature-copy mb-0">Check unusual salvage values, fully depreciated active assets, and missing setup details more easily.</p>
             </article>
             <article class="feature-card">
-                <strong>AI narrative summary</strong>
-                <p class="feature-copy mb-0">Turn PPE data into an explainable accounting summary with OpenAI or local fallback insights.</p>
+                <strong>Analysis report</strong>
+                <p class="feature-copy mb-0">Generate a written PPE summary with OpenAI or use the built-in fallback analysis.</p>
             </article>
         </div>
     </section>
 
     <section class="auth-card">
         <div>
-            <p class="eyebrow mb-2">Workspace access</p>
+            <p class="eyebrow mb-2">Login</p>
             <h2 class="auth-title h3 mb-2">Log in to continue</h2>
             <p class="text-soft mb-0">Use the seeded demo accounts below or replace them after setup.</p>
         </div>
