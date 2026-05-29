@@ -227,13 +227,22 @@ function generate_depreciation_schedule(array $asset): array
     }
 
     $acquisitionYear = (int) date('Y', strtotime($acquisitionDate));
+    $depreciationStartYear = $acquisitionYear + 1;
     $depreciableBase = max($cost - $salvageValue, 0);
     $annualDepreciation = calculate_annual_depreciation($cost, $salvageValue, $usefulLife);
     $accumulated = 0.0;
-    $schedule = [];
+    $schedule = [
+        [
+            'depreciation_year' => $acquisitionYear,
+            'beginning_value' => round($cost, 2),
+            'depreciation_expense' => 0.0,
+            'accumulated_depreciation' => 0.0,
+            'ending_value' => round($cost, 2),
+        ],
+    ];
 
     for ($index = 0; $index < $usefulLife; $index++) {
-        $year = $acquisitionYear + $index;
+        $year = $depreciationStartYear + $index;
         $beginningValue = round($cost - $accumulated, 2);
         $remainingDepreciableBase = round($depreciableBase - $accumulated, 2);
         $expense = $index === ($usefulLife - 1)
@@ -253,6 +262,33 @@ function generate_depreciation_schedule(array $asset): array
     }
 
     return $schedule;
+}
+
+function depreciation_schedule_needs_refresh(array $storedRows, array $generatedSchedule): bool
+{
+    if (count($storedRows) !== count($generatedSchedule)) {
+        return true;
+    }
+
+    foreach ($generatedSchedule as $index => $row) {
+        $storedRow = $storedRows[$index] ?? null;
+
+        if ($storedRow === null) {
+            return true;
+        }
+
+        if ((int) $storedRow['depreciation_year'] !== (int) $row['depreciation_year']) {
+            return true;
+        }
+
+        foreach (['beginning_value', 'depreciation_expense', 'accumulated_depreciation', 'ending_value'] as $key) {
+            if (round((float) $storedRow[$key], 2) !== round((float) $row[$key], 2)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 function rebuild_depreciation_schedule(PDO $pdo, int $assetId): void
@@ -303,6 +339,12 @@ function rebuild_depreciation_schedule(PDO $pdo, int $assetId): void
 
 function fetch_depreciation_rows(PDO $pdo, int $assetId): array
 {
+    $asset = fetch_asset_by_id($pdo, $assetId);
+
+    if (!$asset) {
+        return [];
+    }
+
     $statement = $pdo->prepare(
         'SELECT schedule_id, asset_id, depreciation_year, beginning_value, depreciation_expense,
                 accumulated_depreciation, ending_value
@@ -312,8 +354,9 @@ function fetch_depreciation_rows(PDO $pdo, int $assetId): array
     );
     $statement->execute(['asset_id' => $assetId]);
     $rows = $statement->fetchAll() ?: [];
+    $generatedSchedule = generate_depreciation_schedule($asset);
 
-    if ($rows === [] && fetch_asset_by_id($pdo, $assetId)) {
+    if ($rows === [] || depreciation_schedule_needs_refresh($rows, $generatedSchedule)) {
         rebuild_depreciation_schedule($pdo, $assetId);
         $statement->execute(['asset_id' => $assetId]);
         $rows = $statement->fetchAll() ?: [];
@@ -333,6 +376,7 @@ function get_asset_metrics(array $asset, ?int $year = null): array
     $acquisitionYear = strtotime((string) ($asset['acquisition_date'] ?? '')) !== false
         ? (int) date('Y', strtotime((string) $asset['acquisition_date']))
         : CURRENT_YEAR;
+    $depreciationStartYear = $acquisitionYear + 1;
 
     $selectedRow = null;
     foreach ($schedule as $row) {
@@ -346,8 +390,8 @@ function get_asset_metrics(array $asset, ?int $year = null): array
     }
 
     $elapsedYears = 0;
-    if ($evaluationYear >= $acquisitionYear && $usefulLife > 0) {
-        $elapsedYears = min(($evaluationYear - $acquisitionYear) + 1, $usefulLife);
+    if ($evaluationYear >= $depreciationStartYear && $usefulLife > 0) {
+        $elapsedYears = min(($evaluationYear - $depreciationStartYear) + 1, $usefulLife);
     }
 
     $accumulated = $selectedRow['accumulated_depreciation'] ?? 0.0;
@@ -373,8 +417,8 @@ function get_asset_metrics(array $asset, ?int $year = null): array
         'is_fully_depreciated' => $isFullyDepreciated,
         'condition' => $condition,
         'schedule_rows' => $schedule,
-        'schedule_year_start' => $schedule[0]['depreciation_year'] ?? $acquisitionYear,
-        'schedule_year_end' => $schedule !== [] ? end($schedule)['depreciation_year'] : $acquisitionYear,
+        'schedule_year_start' => $schedule[0]['depreciation_year'] ?? $depreciationStartYear,
+        'schedule_year_end' => $schedule !== [] ? end($schedule)['depreciation_year'] : $depreciationStartYear,
     ];
 
     $metrics['anomalies'] = detect_asset_anomalies($asset, $metrics);

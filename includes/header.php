@@ -38,7 +38,7 @@ $showShell = $loggedInUser !== null;
                         <p class="page-description mb-0"><?= e($pageDescription) ?></p>
                     </div>
                     <div class="topbar-meta">
-                        <div class="role-pill">
+                        <div class="role-pill"> 
                             <i class="bi bi-shield-check"></i>
                             <span><?= e($loggedInUser['role']) ?></span>
                         </div>

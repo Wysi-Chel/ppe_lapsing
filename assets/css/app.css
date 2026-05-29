@@ -340,6 +340,19 @@ body {
     letter-spacing: 0.08em;
 }
 
+.lapsing-table {
+    min-width: 760px;
+}
+
+.lapsing-table thead th {
+    color: var(--text-main);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+}
+
 .table tbody tr:hover {
     background: rgba(255, 255, 255, 0.035);
 }

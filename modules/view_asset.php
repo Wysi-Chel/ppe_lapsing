@@ -36,24 +36,24 @@ require_once APP_ROOT . '/includes/header.php';
 
 <div class="metric-grid mb-4">
     <section class="metric-card">
-        <p class="metric-label mb-2">Acquisition Cost</p>
+        <p class="metric-label mb-2">Acquisition Price</p>
         <h2 class="metric-value mb-1"><?= e(money((float) $asset['acquisition_cost'])) ?></h2>
         <p class="metric-meta mb-0">Purchased on <?= e(format_date((string) $asset['acquisition_date'])) ?></p>
     </section>
     <section class="metric-card">
-        <p class="metric-label mb-2">Annual Depreciation</p>
+        <p class="metric-label mb-2">Useful Life</p>
+        <h2 class="metric-value mb-1"><?= e((string) $asset['useful_life']) ?> years</h2>
+        <p class="metric-meta mb-0">Applied straight-line period</p>
+    </section>
+    <section class="metric-card">
+        <p class="metric-label mb-2">Depreciation Expense</p>
         <h2 class="metric-value mb-1"><?= e(money($metrics['annual_depreciation'])) ?></h2>
-        <p class="metric-meta mb-0">Straight-line per year</p>
+        <p class="metric-meta mb-0">Recognized each year</p>
     </section>
     <section class="metric-card">
-        <p class="metric-label mb-2">Accumulated Depreciation</p>
-        <h2 class="metric-value mb-1"><?= e(money($metrics['accumulated_depreciation'])) ?></h2>
-        <p class="metric-meta mb-0">Recognized up to <?= e((string) CURRENT_YEAR) ?></p>
-    </section>
-    <section class="metric-card">
-        <p class="metric-label mb-2">Carrying Amount</p>
+        <p class="metric-label mb-2">Net Book Value</p>
         <h2 class="metric-value mb-1"><?= e(money($metrics['carrying_amount'])) ?></h2>
-        <p class="metric-meta mb-0"><?= e((string) $metrics['remaining_years']) ?> year(s) remaining</p>
+        <p class="metric-meta mb-0">Cost less accumulated depreciation</p>
     </section>
 </div>
 
@@ -111,24 +111,26 @@ require_once APP_ROOT . '/includes/header.php';
                     <p class="eyebrow mb-2">Generated schedule</p>
                     <h2 class="section-title mb-0">Yearly lapsing table</h2>
                 </div>
-                <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> years</span>
+                <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
             </div>
             <div class="table-wrap">
-                <table class="table align-middle">
+                <table class="table align-middle lapsing-table">
                     <thead>
                         <tr>
-                            <th>Year</th>
-                            <th>Beginning Value</th>
-                            <th>Depreciation Expense</th>
-                            <th>Accumulated</th>
-                            <th>Ending Value</th>
+                            <th>year</th>
+                            <th>cost</th>
+                            <th>additional</th>
+                            <th>annual depreciation</th>
+                            <th>accumulated depreciation</th>
+                            <th>net value</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($schedule as $row): ?>
                             <tr>
                                 <td><?= e((string) $row['depreciation_year']) ?></td>
-                                <td><?= e(money((float) $row['beginning_value'])) ?></td>
+                                <td><?= e(money((float) $asset['acquisition_cost'])) ?></td>
+                                <td><?= e(money(0.0)) ?></td>
                                 <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
                                 <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
                                 <td><?= e(money((float) $row['ending_value'])) ?></td>

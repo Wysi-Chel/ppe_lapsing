@@ -48,14 +48,9 @@ require_once APP_ROOT . '/includes/header.php';
     <?php if ($selectedAsset && $metrics): ?>
         <div class="metric-grid mb-4">
             <section class="metric-card">
-                <p class="metric-label mb-2">Formula</p>
+                <p class="metric-label mb-2">Acquisition Price</p>
                 <h2 class="metric-value mb-1"><?= e(money((float) $selectedAsset['acquisition_cost'])) ?></h2>
-                <p class="metric-meta mb-0">Cost input</p>
-            </section>
-            <section class="metric-card">
-                <p class="metric-label mb-2">Less Salvage</p>
-                <h2 class="metric-value mb-1"><?= e(money((float) $selectedAsset['salvage_value'])) ?></h2>
-                <p class="metric-meta mb-0">Expected residual value</p>
+                <p class="metric-meta mb-0">Initial recorded cost</p>
             </section>
             <section class="metric-card">
                 <p class="metric-label mb-2">Useful Life</p>
@@ -63,9 +58,14 @@ require_once APP_ROOT . '/includes/header.php';
                 <p class="metric-meta mb-0">Applied straight-line period</p>
             </section>
             <section class="metric-card">
-                <p class="metric-label mb-2">Annual Depreciation</p>
+                <p class="metric-label mb-2">Depreciation Expense</p>
                 <h2 class="metric-value mb-1"><?= e(money($metrics['annual_depreciation'])) ?></h2>
-                <p class="metric-meta mb-0">(Cost - Salvage) / Life</p>
+                <p class="metric-meta mb-0">Recognized each year</p>
+            </section>
+            <section class="metric-card">
+                <p class="metric-label mb-2">Net Book Value</p>
+                <h2 class="metric-value mb-1"><?= e(money($metrics['carrying_amount'])) ?></h2>
+                <p class="metric-meta mb-0">Cost less accumulated depreciation</p>
             </section>
         </div>
 
@@ -78,21 +78,23 @@ require_once APP_ROOT . '/includes/header.php';
                 <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
             </div>
             <div class="table-wrap">
-                <table class="table align-middle">
+                <table class="table align-middle lapsing-table">
                     <thead>
                         <tr>
-                            <th>Year</th>
-                            <th>Beginning Carrying Amount</th>
-                            <th>Depreciation Expense</th>
-                            <th>Accumulated Depreciation</th>
-                            <th>Ending Carrying Amount</th>
+                            <th>year</th>
+                            <th>cost</th>
+                            <th>additional</th>
+                            <th>annual depreciation</th>
+                            <th>accumulated depreciation</th>
+                            <th>net value</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($schedule as $row): ?>
                             <tr>
                                 <td><?= e((string) $row['depreciation_year']) ?></td>
-                                <td><?= e(money((float) $row['beginning_value'])) ?></td>
+                                <td><?= e(money((float) $selectedAsset['acquisition_cost'])) ?></td>
+                                <td><?= e(money(0.0)) ?></td>
                                 <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
                                 <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
                                 <td><?= e(money((float) $row['ending_value'])) ?></td>
