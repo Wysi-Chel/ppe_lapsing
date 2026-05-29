@@ -13,7 +13,6 @@ $metrics = $selectedAsset ? get_asset_metrics($selectedAsset) : null;
 
 $pageTitle = 'Depreciation';
 $pageHeading = 'Depreciation Schedule';
-$pageDescription = 'Review the straight-line lapsing path of any PPE item year by year.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -25,9 +24,13 @@ require_once APP_ROOT . '/includes/header.php';
     </section>
 <?php else: ?>
     <section class="shell-card mb-4">
+        <div class="mb-4">
+            <p class="eyebrow mb-2">Schedule lookup</p>
+            <h2 class="section-title mb-1">Choose an asset</h2>
+        </div>
         <form method="get" class="row g-3 align-items-end">
             <div class="col-lg-8">
-                <label class="form-label" for="asset_id">Choose an asset</label>
+                
                 <select class="form-select" id="asset_id" name="asset_id">
                     <?php foreach ($assetLookup as $assetOption): ?>
                         <option value="<?= e((string) $assetOption['asset_id']) ?>" <?= selected_if($selectedAssetId, $assetOption['asset_id']) ?>>
@@ -73,7 +76,7 @@ require_once APP_ROOT . '/includes/header.php';
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="eyebrow mb-2"><?= e($selectedAsset['asset_code']) ?></p>
-                    <h2 class="section-title mb-0"><?= e($selectedAsset['asset_name']) ?></h2>
+                    <h2 class="section-title mb-1"><?= e($selectedAsset['asset_name']) ?></h2>
                 </div>
                 <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
             </div>

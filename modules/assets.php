@@ -22,10 +22,10 @@ $filters = [
 $categories = fetch_categories($pdo);
 $departments = fetch_departments($pdo);
 $assets = hydrate_assets_with_metrics(fetch_assets($pdo, $filters));
+$activeFilterCount = count(array_filter($filters, static fn (string $value): bool => $value !== ''));
 
 $pageTitle = 'Assets';
 $pageHeading = 'PPE Asset Register';
-$pageDescription = 'Search, review, and maintain the asset master list that powers every schedule and report.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -33,13 +33,16 @@ require_once APP_ROOT . '/includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <p class="eyebrow mb-2">Asset filters</p>
-            <h2 class="section-title mb-0">Search the register</h2>
+            <h2 class="section-title mb-1">Search the register</h2>
         </div>
-        <?php if (can_manage_assets()): ?>
-            <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
-                <i class="bi bi-plus-circle me-2"></i>Add Asset
-            </a>
-        <?php endif; ?>
+        <div class="stack-inline">
+            <span class="badge text-bg-dark"><?= e((string) $activeFilterCount) ?> active filter<?= $activeFilterCount === 1 ? '' : 's' ?></span>
+            <?php if (can_manage_assets()): ?>
+                <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
+                    <i class="bi bi-plus-circle me-2"></i>Add Asset
+                </a>
+            <?php endif; ?>
+        </div>
     </div>
 
     <form method="get" class="row g-3">
@@ -89,12 +92,21 @@ require_once APP_ROOT . '/includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <p class="eyebrow mb-2">Asset list</p>
-            <h2 class="section-title mb-0"><?= e((string) count($assets)) ?> <?= e(pluralize(count($assets), 'record')) ?> found</h2>
+            <h2 class="section-title mb-1"><?= e((string) count($assets)) ?> <?= e(pluralize(count($assets), 'record')) ?> found</h2>
         </div>
     </div>
 
     <?php if ($assets === []): ?>
-        <div class="empty-state">No PPE assets matched the current filters.</div>
+        <div class="empty-state">
+            <h2 class="section-title mb-2">No matching assets</h2>
+            <p class="mb-3">Try clearing one or more filters, or add a new asset if the record has not been created yet.</p>
+            <div class="page-actions justify-content-center">
+                <a class="btn btn-outline-light" href="<?= e(base_url('modules/assets.php')) ?>">Clear filters</a>
+                <?php if (can_manage_assets()): ?>
+                    <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">Add Asset</a>
+                <?php endif; ?>
+            </div>
+        </div>
     <?php else: ?>
         <div class="table-wrap">
             <table class="table align-middle">
@@ -115,7 +127,7 @@ require_once APP_ROOT . '/includes/header.php';
                         <tr>
                             <td>
                                 <strong><?= e($asset['asset_name']) ?></strong>
-                                <div class="text-soft small"><?= e($asset['asset_code']) ?> • <?= e(format_date((string) $asset['acquisition_date'])) ?></div>
+                                <div class="text-soft small"><?= e($asset['asset_code']) ?> / <?= e(format_date((string) $asset['acquisition_date'])) ?></div>
                             </td>
                             <td><?= e((string) ($asset['category_name'] ?? 'Uncategorized')) ?></td>
                             <td><?= e((string) ($asset['department_name'] ?? 'Unassigned')) ?></td>

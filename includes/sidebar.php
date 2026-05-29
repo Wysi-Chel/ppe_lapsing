@@ -16,9 +16,12 @@ if (can_manage_users()) {
     <div class="brand-block">
         <div class="brand-mark">PPE</div>
         <div>
-            <p class="brand-kicker mb-1">Fixed asset records</p>
-            <h2 class="brand-title mb-0">PPE Lapsing System</h2>
+            <h2 class="brand-title mb-0"><?= e(APP_NAME) ?></h2>
         </div>
+    </div>
+
+    <div class="sidebar-section">
+        <p class="nav-caption mb-0">Workspace</p>
     </div>
 
     <nav class="sidebar-nav">
@@ -30,6 +33,15 @@ if (can_manage_users()) {
             </a>
         <?php endforeach; ?>
     </nav>
+
+    <?php if (can_manage_assets()): ?>
+        <div class="sidebar-action">
+            <p class="eyebrow mb-2">Quick action</p>
+            <a class="btn btn-primary w-100" href="<?= e(base_url('modules/add_asset.php')) ?>">
+                <i class="bi bi-plus-circle me-2"></i>Add Asset
+            </a>
+        </div>
+    <?php endif; ?>
 
     <div class="sidebar-footer">
         <div class="sidebar-note">

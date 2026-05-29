@@ -12,7 +12,6 @@ $categorySummary = array_slice(build_category_summary($assets), 0, 5);
 
 $pageTitle = 'Dashboard';
 $pageHeading = 'PPE Dashboard';
-$pageDescription = 'View total cost, depreciation, carrying amount, and items that may need review.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -41,7 +40,7 @@ require_once APP_ROOT . '/includes/header.php';
             <p class="metric-meta mb-0">Recognized straight-line expense to date</p>
         </section>
         <section class="metric-card">
-            <p class="metric-label mb-2">Carrying Amount</p>
+            <p class="metric-label mb-2">Net Value</p>
             <h2 class="metric-value mb-1"><?= e(money($metrics['total_carrying'])) ?></h2>
             <p class="metric-meta mb-0">Current remaining book value</p>
         </section>
@@ -64,26 +63,11 @@ require_once APP_ROOT . '/includes/header.php';
 
     <div class="row g-4">
         <div class="col-lg-7">
-            <section class="shell-card mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <p class="eyebrow mb-2">Summary</p>
-                        <h2 class="section-title mb-0">Current asset status</h2>
-                    </div>
-                    <?php if (can_manage_assets()): ?>
-                        <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
-                            <i class="bi bi-plus-circle me-2"></i>Add Asset
-                        </a>
-                    <?php endif; ?>
-                </div>
-                <p class="mb-0"><?= e(build_risk_summary($metrics, $alerts)) ?></p>
-            </section>
-
             <section class="shell-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="eyebrow mb-2">Assets</p>
-                        <h2 class="section-title mb-0">Recent records</h2>
+                        <h2 class="section-title mb-1">Recent records</h2>
                     </div>
                     <a class="btn btn-outline-light" href="<?= e(base_url('modules/assets.php')) ?>">View all assets</a>
                 </div>
@@ -103,7 +87,7 @@ require_once APP_ROOT . '/includes/header.php';
                                 <tr>
                                     <td>
                                         <strong><?= e($asset['asset_name']) ?></strong>
-                                        <div class="text-soft small"><?= e($asset['asset_code']) ?> • <?= e((string) ($asset['category_name'] ?? 'Uncategorized')) ?></div>
+                                        <div class="text-soft small"><?= e($asset['asset_code']) ?> / <?= e((string) ($asset['category_name'] ?? 'Uncategorized')) ?></div>
                                     </td>
                                     <td><span class="badge <?= e(status_badge_class((string) $asset['status'])) ?>"><?= e($asset['status']) ?></span></td>
                                     <td><span class="badge <?= e(condition_badge_class((string) $asset['condition'])) ?>"><?= e($asset['condition']) ?></span></td>
@@ -124,7 +108,7 @@ require_once APP_ROOT . '/includes/header.php';
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="eyebrow mb-2">Categories</p>
-                        <h2 class="section-title mb-0">Assets by category</h2>
+                        <h2 class="section-title mb-1">Assets by category</h2>
                     </div>
                     <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/reports.php')) ?>">Full report</a>
                 </div>
@@ -150,7 +134,8 @@ require_once APP_ROOT . '/includes/header.php';
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="eyebrow mb-2">Audit queue</p>
-                        <h2 class="section-title mb-0">Flagged records</h2>
+                        <h2 class="section-title mb-1">Flagged records</h2>
+                        <p class="section-copy mb-0">Warnings here usually mean a record needs validation, update, or disposal follow-up.</p>
                     </div>
                     <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/reports.php')) ?>">Open reports</a>
                 </div>
@@ -165,7 +150,7 @@ require_once APP_ROOT . '/includes/header.php';
                                     <strong><?= e($asset['asset_name']) ?></strong>
                                     <span class="badge <?= e(status_badge_class((string) $asset['status'])) ?>"><?= e($asset['status']) ?></span>
                                 </div>
-                                <p class="text-soft small mb-1"><?= e($asset['asset_code']) ?> • <?= e((string) ($asset['department_name'] ?? 'Unassigned')) ?></p>
+                                <p class="text-soft small mb-1"><?= e($asset['asset_code']) ?> / <?= e((string) ($asset['department_name'] ?? 'Unassigned')) ?></p>
                                 <p class="text-soft small mb-0"><?= e(excerpt(implode('; ', $asset['anomalies']), 180)) ?></p>
                             </div>
                         <?php endforeach; ?>

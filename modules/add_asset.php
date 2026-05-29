@@ -41,35 +41,11 @@ $cancelUrl = 'modules/assets.php';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
-<div class="row g-4">
-    <div class="col-lg-8">
-        <section class="shell-card">
-            <div class="mb-4">
-                <p class="eyebrow mb-2">Asset setup</p>
-                <h2 class="section-title mb-2">Record a new PPE item</h2>
-            </div>
-            <?php require APP_ROOT . '/includes/asset_form.php'; ?>
-        </section>
+<section class="shell-card">
+    <div class="mb-4">
+        <p class="eyebrow mb-2">Asset setup</p>
+        <h2 class="section-title mb-2">Record a new PPE item</h2>
     </div>
-    <div class="col-lg-4">
-        <section class="shell-card">
-            <p class="eyebrow mb-2">Formula reference</p>
-            <h2 class="section-title mb-3">Straight-line depreciation</h2>
-            <div class="helper-card mb-3">
-                <strong>Annual Depreciation</strong>
-                <p class="mb-0">(Cost - Salvage Value) / Useful Life</p>
-            </div>
-            <div class="list-panel">
-                <div class="list-row">
-                    <strong>What the system generates</strong>
-                    <p class="text-soft small mb-0">A yearly schedule with beginning value, expense, accumulated depreciation, and ending carrying amount.</p>
-                </div>
-                <div class="list-row">
-                    <strong>What to double-check</strong>
-                    <p class="text-soft small mb-0">Make sure salvage value is not higher than cost and the useful life matches the category or policy.</p>
-                </div>
-            </div>
-        </section>
-    </div>
-</div>
+    <?php require APP_ROOT . '/includes/asset_form.php'; ?>
+</section>
 <?php require_once APP_ROOT . '/includes/footer.php'; ?>

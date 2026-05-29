@@ -22,7 +22,7 @@ $pageDescription = 'Review the complete PPE profile, depreciation path, and any 
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
-<div class="d-flex flex-wrap gap-2 mb-4">
+<div class="page-actions mb-4">
     <a class="btn btn-outline-light" href="<?= e(base_url('modules/assets.php')) ?>">
         <i class="bi bi-arrow-left me-2"></i>Back to Assets
     </a>
@@ -109,7 +109,8 @@ require_once APP_ROOT . '/includes/header.php';
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="eyebrow mb-2">Generated schedule</p>
-                    <h2 class="section-title mb-0">Yearly lapsing table</h2>
+                    <h2 class="section-title mb-1">Yearly lapsing table</h2>
+                    <p class="section-copy mb-0">The purchase year is shown as the opening row, then annual depreciation begins in the following year.</p>
                 </div>
                 <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
             </div>

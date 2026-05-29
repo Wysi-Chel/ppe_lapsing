@@ -54,7 +54,7 @@ if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
 
 date_default_timezone_set('Asia/Manila');
 
-define('APP_NAME', '');
+define('APP_NAME', 'PPE Lapsing System');
 define('APP_ROOT', dirname(__DIR__));
 define('CURRENT_YEAR', (int) date('Y'));
 

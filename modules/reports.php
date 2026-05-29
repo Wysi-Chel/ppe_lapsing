@@ -13,7 +13,6 @@ $alerts = build_asset_alerts($assets);
 
 $pageTitle = 'Reports';
 $pageHeading = 'Reports and Audit View';
-$pageDescription = 'Compare category totals, department allocations, and the records most likely to require follow-up.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -51,7 +50,7 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card h-100">
                 <div class="mb-3">
                     <p class="eyebrow mb-2">Breakdown</p>
-                    <h2 class="section-title mb-0">Category summary</h2>
+                    <h2 class="section-title mb-1">Category summary</h2>
                 </div>
                 <div class="table-wrap">
                     <table class="table align-middle">
@@ -81,7 +80,7 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card h-100">
                 <div class="mb-3">
                     <p class="eyebrow mb-2">Allocation</p>
-                    <h2 class="section-title mb-0">Department summary</h2>
+                    <h2 class="section-title mb-1">Department summary</h2>
                 </div>
                 <div class="table-wrap">
                     <table class="table align-middle">
@@ -125,7 +124,7 @@ require_once APP_ROOT . '/includes/header.php';
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <strong><?= e($asset['asset_name']) ?></strong>
-                                        <div class="text-soft small"><?= e($asset['asset_code']) ?> • <?= e((string) $asset['department_name']) ?></div>
+                                        <div class="text-soft small"><?= e($asset['asset_code']) ?> / <?= e((string) $asset['department_name']) ?></div>
                                     </div>
                                     <div class="text-end">
                                         <div><?= e((string) $asset['remaining_years']) ?> year(s)</div>

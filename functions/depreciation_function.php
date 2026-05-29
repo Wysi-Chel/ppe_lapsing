@@ -13,6 +13,29 @@ function fetch_users(PDO $pdo): array
     return $statement->fetchAll() ?: [];
 }
 
+function fetch_user_by_id(PDO $pdo, int $userId): ?array
+{
+    $statement = $pdo->prepare(
+        'SELECT user_id, full_name, email, role, created_at
+         FROM users
+         WHERE user_id = :user_id
+         LIMIT 1'
+    );
+    $statement->execute(['user_id' => $userId]);
+    $user = $statement->fetch();
+
+    return $user ?: null;
+}
+
+function update_user_password(PDO $pdo, int $userId, string $password): void
+{
+    $statement = $pdo->prepare('UPDATE users SET password = :password WHERE user_id = :user_id');
+    $statement->execute([
+        'password' => password_hash($password, PASSWORD_DEFAULT),
+        'user_id' => $userId,
+    ]);
+}
+
 function fetch_categories(PDO $pdo): array
 {
     $statement = $pdo->query('SELECT category_id, category_name FROM categories ORDER BY category_name');
