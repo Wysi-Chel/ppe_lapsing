@@ -491,7 +491,7 @@ function detect_asset_anomalies(array $asset, array $metrics): array
     }
 
     if ($metrics['carrying_amount'] < -0.01) {
-        $anomalies[] = 'Carrying amount dropped below zero.';
+        $anomalies[] = 'Net amount dropped below zero.';
     }
 
     if ($metrics['is_fully_depreciated'] && $status === 'Active') {
@@ -535,7 +535,7 @@ function build_dashboard_metrics(array $assets): array
         $metrics['total_carrying'] += (float) ($asset['carrying_amount'] ?? 0);
         $metrics['active_count'] += (($asset['status'] ?? '') === 'Active') ? 1 : 0;
         $metrics['fully_depreciated_count'] += !empty($asset['is_fully_depreciated']) ? 1 : 0;
-        $metrics['near_end_count'] += (!empty($asset['remaining_years']) && (int) $asset['remaining_years'] <= 1 && empty($asset['is_fully_depreciated'])) ? 1 : 0;
+        $metrics['near_end_count'] += (isset($asset['remaining_years']) && (int) $asset['remaining_years'] <= 1 && empty($asset['is_fully_depreciated'])) ? 1 : 0;
         $metrics['unusual_count'] += !empty($asset['anomaly_count']) ? 1 : 0;
     }
 
@@ -609,7 +609,7 @@ function build_asset_alerts(array $assets): array
     ];
 
     foreach ($assets as $asset) {
-        if (!empty($asset['remaining_years']) && (int) $asset['remaining_years'] <= 1 && empty($asset['is_fully_depreciated'])) {
+        if (isset($asset['remaining_years']) && (int) $asset['remaining_years'] <= 1 && empty($asset['is_fully_depreciated'])) {
             $alerts['near_end'][] = $asset;
         }
 
@@ -630,6 +630,11 @@ function build_asset_alerts(array $assets): array
     usort(
         $alerts['unusual'],
         static fn (array $left, array $right): int => ($right['anomaly_count'] <=> $left['anomaly_count']) ?: strcmp((string) $left['asset_name'], (string) $right['asset_name'])
+    );
+
+    usort(
+        $alerts['fully_depreciated_active'],
+        static fn (array $left, array $right): int => strcmp((string) $left['asset_name'], (string) $right['asset_name'])
     );
 
     return $alerts;

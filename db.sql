@@ -62,6 +62,29 @@ CREATE TABLE IF NOT EXISTS depreciation_schedule (
         FOREIGN KEY (asset_id) REFERENCES assets(asset_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS asset_transfers (
+    transfer_id INT AUTO_INCREMENT PRIMARY KEY,
+    asset_id INT NOT NULL,
+    from_department_id INT NULL,
+    to_department_id INT NULL,
+    from_location VARCHAR(150) DEFAULT NULL,
+    to_location VARCHAR(150) DEFAULT NULL,
+    transfer_date DATE NOT NULL,
+    notes TEXT DEFAULT NULL,
+    transferred_by_user_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_asset_transfers_asset (asset_id),
+    INDEX idx_asset_transfers_date (transfer_date),
+    CONSTRAINT fk_asset_transfers_asset
+        FOREIGN KEY (asset_id) REFERENCES assets(asset_id) ON DELETE CASCADE,
+    CONSTRAINT fk_asset_transfers_from_department
+        FOREIGN KEY (from_department_id) REFERENCES departments(department_id) ON DELETE SET NULL,
+    CONSTRAINT fk_asset_transfers_to_department
+        FOREIGN KEY (to_department_id) REFERENCES departments(department_id) ON DELETE SET NULL,
+    CONSTRAINT fk_asset_transfers_user
+        FOREIGN KEY (transferred_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL
+);
+
 INSERT INTO categories (category_name)
 VALUES
     ('Computer Equipment'),

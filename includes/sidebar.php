@@ -8,6 +8,12 @@ $navItems = [
     ['label' => 'Reports', 'href' => 'modules/reports.php', 'icon' => 'bi-bar-chart-line', 'match' => '/modules/reports.php'],
 ];
 
+if (can_manage_assets()) {
+    $navItems[] = ['label' => 'Transfers', 'href' => 'modules/transfers.php', 'icon' => 'bi-arrow-left-right', 'match' => '/modules/transfers.php'];
+}
+
+$navItems[] = ['label' => 'Exports', 'href' => 'modules/exports.php', 'icon' => 'bi-download', 'match' => ['/modules/exports.php', '/modules/export.php', '/modules/print_view.php']];
+
 if (can_manage_users()) {
     $navItems[] = ['label' => 'Users', 'href' => 'auth/register.php', 'icon' => 'bi-people', 'match' => '/auth/register.php'];
 }

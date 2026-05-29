@@ -106,11 +106,18 @@ function role_badge_class(string $role): string
     };
 }
 
-function active_path(string $needle): bool
+function active_path(string|array $needle): bool
 {
     $scriptName = str_replace('\\', '/', $_SERVER['PHP_SELF'] ?? '');
+    $needles = is_array($needle) ? $needle : [$needle];
 
-    return str_ends_with($scriptName, $needle);
+    foreach ($needles as $candidate) {
+        if (str_ends_with($scriptName, (string) $candidate)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function request_value(string $key, mixed $default = ''): mixed
@@ -142,4 +149,38 @@ function excerpt(string $text, int $limit = 180): string
     }
 
     return strlen($text) > $limit ? substr($text, 0, max(0, $limit - 3)) . '...' : $text;
+}
+
+function download_csv(string $filename, array $headerRow, array $rows): never
+{
+    $safeFilename = preg_replace('/[^A-Za-z0-9._-]+/', '-', trim($filename)) ?: 'export.csv';
+
+    if (!str_ends_with(strtolower($safeFilename), '.csv')) {
+        $safeFilename .= '.csv';
+    }
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="' . $safeFilename . '"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
+    $stream = fopen('php://output', 'wb');
+
+    if ($stream === false) {
+        throw new RuntimeException('Unable to open the CSV output stream.');
+    }
+
+    fwrite($stream, "\xEF\xBB\xBF");
+    fputcsv($stream, $headerRow);
+
+    foreach ($rows as $row) {
+        $values = array_map(
+            static fn (mixed $value): string => $value === null ? '' : (string) $value,
+            $row
+        );
+        fputcsv($stream, $values);
+    }
+
+    fclose($stream);
+    exit;
 }

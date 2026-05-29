@@ -15,6 +15,7 @@ if (!$asset) {
 
 $metrics = get_asset_metrics($asset);
 $schedule = fetch_depreciation_rows($pdo, $assetId);
+$transferHistory = fetch_asset_transfers($pdo, $assetId, 6);
 
 $pageTitle = 'View Asset';
 $pageHeading = $asset['asset_name'];
@@ -28,6 +29,9 @@ require_once APP_ROOT . '/includes/header.php';
     </a>
     <a class="btn btn-outline-light" href="<?= e(base_url('modules/depreciation.php?asset_id=' . $assetId)) ?>">Open Depreciation View</a>
     <?php if (can_manage_assets()): ?>
+        <a class="btn btn-outline-light" href="<?= e(base_url('modules/transfers.php?asset_id=' . $assetId)) ?>">
+            <i class="bi bi-arrow-left-right me-2"></i>Transfer Asset
+        </a>
         <a class="btn btn-warning" href="<?= e(base_url('modules/edit_asset.php?asset_id=' . $assetId)) ?>">
             <i class="bi bi-pencil-square me-2"></i>Edit Asset
         </a>
@@ -108,6 +112,44 @@ require_once APP_ROOT . '/includes/header.php';
                 </div>
             <?php endif; ?>
         </section>
+
+        <section class="shell-card mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="section-title mb-1">Transfer history</h2>
+                    <p class="section-copy mb-0">Recent department and location changes for this asset.</p>
+                </div>
+                <?php if (can_manage_assets()): ?>
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/transfers.php?asset_id=' . $assetId)) ?>">Open Transfers</a>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($transferHistory === []): ?>
+                <div class="empty-state">No transfers have been recorded for this asset yet.</div>
+            <?php else: ?>
+                <div class="list-panel">
+                    <?php foreach ($transferHistory as $transfer): ?>
+                        <?php
+                        $fromDepartment = trim((string) ($transfer['from_department_name'] ?? '')) ?: 'Unassigned';
+                        $toDepartment = trim((string) ($transfer['to_department_name'] ?? '')) ?: 'Unassigned';
+                        ?>
+                        <div class="list-row">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <strong><?= e(format_date((string) $transfer['transfer_date'])) ?></strong>
+                                <span class="text-soft small"><?= e((string) ($transfer['transferred_by_name'] ?? 'System')) ?></span>
+                            </div>
+                            <p class="text-soft small mb-1">
+                                <?= e($fromDepartment . ' / ' . asset_location_label((string) ($transfer['from_location'] ?? ''))) ?>
+                            </p>
+                            <p class="mb-1">
+                                <?= e($toDepartment . ' / ' . asset_location_label((string) ($transfer['to_location'] ?? ''))) ?>
+                            </p>
+                            <p class="text-soft small mb-0"><?= e((string) ($transfer['notes'] ?: 'No transfer notes')) ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </section>
     </div>
 
     <div class="col-lg-7">
@@ -118,7 +160,11 @@ require_once APP_ROOT . '/includes/header.php';
                     <h2 class="section-title mb-1">Yearly lapsing table</h2>
                     <p class="section-copy mb-0">The purchase year is shown as the opening row, with salvage already deducted from net value. Annual depreciation begins in the following year.</p>
                 </div>
-                <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
+                <div class="stack-inline">
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $assetId)) ?>">Export CSV</a>
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $assetId)) ?>" target="_blank" rel="noopener">Print</a>
+                    <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
+                </div>
             </div>
             <div class="table-wrap">
                 <table class="table align-middle lapsing-table">

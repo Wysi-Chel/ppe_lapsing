@@ -28,7 +28,7 @@ require_once APP_ROOT . '/includes/header.php';
         </div>
     </section>
 <?php else: ?>
-    <div class="metric-grid mb-4">
+    <div class="metric-grid metric-grid-triple mb-4">
         <section class="metric-card">
             <p class="metric-label mb-2">Total PPE Cost</p>
             <h2 class="metric-value mb-1"><?= e(money($metrics['total_cost'])) ?></h2>
@@ -78,7 +78,7 @@ require_once APP_ROOT . '/includes/header.php';
                                 <th>Asset</th>
                                 <th>Status</th>
                                 <th>Condition</th>
-                                <th>Carrying Amount</th>
+                                <th>Net Amount</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -122,7 +122,7 @@ require_once APP_ROOT . '/includes/header.php';
                                 </div>
                                 <div class="text-end">
                                     <div><?= e(money($category['total_cost'])) ?></div>
-                                    <div class="text-soft small"><?= e(money($category['total_carrying'])) ?> carrying</div>
+                                    <div class="text-soft small"><?= e(money($category['total_carrying'])) ?> net</div>
                                 </div>
                             </div>
                         </div>

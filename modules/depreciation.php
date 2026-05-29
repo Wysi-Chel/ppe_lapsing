@@ -84,7 +84,11 @@ require_once APP_ROOT . '/includes/header.php';
                     <h2 class="section-title mb-1"><?= e($selectedAsset['asset_name']) ?></h2>
                     <p class="section-copy mb-0">Net value in this table already reflects the salvage deduction from the opening year.</p>
                 </div>
-                <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
+                <div class="stack-inline justify-content-end">
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $selectedAssetId)) ?>">Export CSV</a>
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $selectedAssetId)) ?>" target="_blank" rel="noopener">Print</a>
+                    <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
+                </div>
             </div>
             <div class="table-wrap">
                 <table class="table align-middle lapsing-table">

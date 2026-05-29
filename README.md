@@ -8,6 +8,9 @@
 - PPE asset register with add, edit, view, delete, and filtering
 - Automatic straight-line depreciation schedule generation
 - Dashboard, reports, and audit-style record checks
+- Asset transfer history with department and location updates
+- Alert queue for near-end, fully depreciated active, and unusual records
+- CSV export and print-friendly views for assets, alerts, transfers, and schedules
 
 ## Local setup
 

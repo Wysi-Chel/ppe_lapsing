@@ -118,7 +118,7 @@ require_once APP_ROOT . '/includes/header.php';
                         <th>Status</th>
                         <th>Condition</th>
                         <th>Cost</th>
-                        <th>Carrying</th>
+                        <th>Net Amount</th>
                         <th>Actions</th>
                     </tr>
                 </thead>

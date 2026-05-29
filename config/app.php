@@ -75,4 +75,5 @@ define('BASE_URL', $baseUrl);
 require_once APP_ROOT . '/includes/helpers.php';
 require_once APP_ROOT . '/config/database.php';
 require_once APP_ROOT . '/functions/depreciation_function.php';
+require_once APP_ROOT . '/functions/asset_workflow.php';
 require_once APP_ROOT . '/includes/auth.php';

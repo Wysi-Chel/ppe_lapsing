@@ -64,7 +64,7 @@ require_once APP_ROOT . '/includes/header.php';
             <?php $metrics = get_asset_metrics($asset); ?>
             <div class="list-panel">
                 <div class="list-row">
-                    <strong>Current carrying amount</strong>
+                    <strong>Current net amount</strong>
                     <p class="text-soft small mb-0"><?= e(money($metrics['carrying_amount'])) ?></p>
                 </div>
                 <div class="list-row">
