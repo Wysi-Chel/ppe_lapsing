@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $pageTitle = $pageTitle ?? APP_NAME;
 $pageHeading = $pageHeading ?? $pageTitle;
-$pageDescription = $pageDescription ?? 'Keep your PPE schedules, assets, and analysis in one place.';
+$pageDescription = $pageDescription ?? 'Keep your PPE schedules, assets, and reports in one place.';
 $documentTitle = $pageTitle === APP_NAME ? APP_NAME : $pageTitle . '  ' . APP_NAME;
 $loggedInUser = current_user();
 $showShell = $loggedInUser !== null;

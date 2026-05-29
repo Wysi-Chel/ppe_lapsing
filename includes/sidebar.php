@@ -6,7 +6,6 @@ $navItems = [
     ['label' => 'Assets', 'href' => 'modules/assets.php', 'icon' => 'bi-pc-display', 'match' => '/modules/assets.php'],
     ['label' => 'Depreciation', 'href' => 'modules/depreciation.php', 'icon' => 'bi-graph-up-arrow', 'match' => '/modules/depreciation.php'],
     ['label' => 'Reports', 'href' => 'modules/reports.php', 'icon' => 'bi-bar-chart-line', 'match' => '/modules/reports.php'],
-    ['label' => 'AI Analysis', 'href' => 'modules/ai_analysis.php', 'icon' => 'bi-stars', 'match' => '/modules/ai_analysis.php'],
 ];
 
 if (can_manage_users()) {

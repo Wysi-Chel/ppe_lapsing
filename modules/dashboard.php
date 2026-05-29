@@ -9,7 +9,6 @@ $assets = hydrate_assets_with_metrics(fetch_assets($pdo));
 $metrics = build_dashboard_metrics($assets);
 $alerts = build_asset_alerts($assets);
 $categorySummary = array_slice(build_category_summary($assets), 0, 5);
-$recentAnalyses = fetch_ai_analysis_history($pdo, 3);
 
 $pageTitle = 'Dashboard';
 $pageHeading = 'PPE Dashboard';
@@ -21,7 +20,7 @@ require_once APP_ROOT . '/includes/header.php';
     <section class="shell-card">
         <div class="empty-state">
             <h2 class="section-title mb-2">No assets have been recorded yet</h2>
-            <p class="mb-3">Start by adding PPE items so the system can generate dashboards, schedules, reports, and AI insights.</p>
+            <p class="mb-3">Start by adding PPE items so the system can generate dashboards, schedules, and reports.</p>
             <?php if (can_manage_assets()): ?>
                 <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
                     <i class="bi bi-plus-circle me-2"></i>Add the first asset
@@ -150,24 +149,24 @@ require_once APP_ROOT . '/includes/header.php';
             <section class="shell-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <p class="eyebrow mb-2">Analysis</p>
-                        <h2 class="section-title mb-0">Saved reports</h2>
+                        <p class="eyebrow mb-2">Audit queue</p>
+                        <h2 class="section-title mb-0">Flagged records</h2>
                     </div>
-                    <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/ai_analysis.php')) ?>">Open AI module</a>
+                    <a class="btn btn-outline-light btn-sm" href="<?= e(base_url('modules/reports.php')) ?>">Open reports</a>
                 </div>
 
-                <?php if ($recentAnalyses === []): ?>
-                    <div class="empty-state">No analysis has been saved yet.</div>
+                <?php if ($alerts['unusual'] === []): ?>
+                    <div class="empty-state">No unusual records are waiting for review.</div>
                 <?php else: ?>
                     <div class="list-panel">
-                        <?php foreach ($recentAnalyses as $analysis): ?>
+                        <?php foreach (array_slice($alerts['unusual'], 0, 4) as $asset): ?>
                             <div class="list-row">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge <?= e(analysis_badge_class((string) $analysis['analysis_type'])) ?>"><?= e($analysis['analysis_type']) ?></span>
-                                    <span class="text-soft small"><?= e(format_date((string) $analysis['generated_at'], 'M d, Y h:i A')) ?></span>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <strong><?= e($asset['asset_name']) ?></strong>
+                                    <span class="badge <?= e(status_badge_class((string) $asset['status'])) ?>"><?= e($asset['status']) ?></span>
                                 </div>
-                                <p class="mb-1"><strong><?= e((string) ($analysis['full_name'] ?? 'Unknown user')) ?></strong></p>
-                                <p class="text-soft small mb-0"><?= e(excerpt((string) $analysis['analysis_result'], 180)) ?></p>
+                                <p class="text-soft small mb-1"><?= e($asset['asset_code']) ?> • <?= e((string) ($asset['department_name'] ?? 'Unassigned')) ?></p>
+                                <p class="text-soft small mb-0"><?= e(excerpt(implode('; ', $asset['anomalies']), 180)) ?></p>
                             </div>
                         <?php endforeach; ?>
                     </div>

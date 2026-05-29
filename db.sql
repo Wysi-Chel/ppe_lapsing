@@ -61,16 +61,6 @@ CREATE TABLE IF NOT EXISTS depreciation_schedule (
         FOREIGN KEY (asset_id) REFERENCES assets(asset_id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS ai_analysis (
-    analysis_id INT AUTO_INCREMENT PRIMARY KEY,
-    analysis_type VARCHAR(100) DEFAULT NULL,
-    analysis_result LONGTEXT DEFAULT NULL,
-    generated_by INT DEFAULT NULL,
-    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_ai_analysis_user
-        FOREIGN KEY (generated_by) REFERENCES users(user_id)
-);
-
 INSERT INTO categories (category_name)
 VALUES
     ('Computer Equipment'),
@@ -96,9 +86,7 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO users (full_name, email, password, role)
 VALUES
-    ('System Administrator', 'admin@ppe.local', '$2y$10$gbEduvqVuZoG/HRLLe/MT.6xH47Yqc6SMycxRijuoy3l9nnLeOs1O', 'Admin'),
-    ('Accounting Officer', 'staff@ppe.local', '$2y$10$Vanso2p.uML29rRZ.I5DVuOG3OZ8ZJuqXCVZnShsDzEb6b6bjg5oO', 'Accounting Staff'),
-    ('Audit Reviewer', 'auditor@ppe.local', '$2y$10$vQm6el2s3euOzr9ST0RZWe/Kv/aVMqfIxdfgcl.e3pzfUodkM31JO', 'Auditor')
+    ('System Administrator', 'admin@ppe.local', '$2y$10$gbEduvqVuZoG/HRLLe/MT.6xH47Yqc6SMycxRijuoy3l9nnLeOs1O', 'Admin')
 ON DUPLICATE KEY UPDATE
     full_name = VALUES(full_name),
     password = VALUES(password),

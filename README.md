@@ -1,45 +1,44 @@
 # PPE Lapsing System
 
-`AI-Integrated PPE Lapsing Schedule Management System` built with `PHP`, `MySQL`, and `Bootstrap`.
+`PPE Lapsing Schedule Management System` built with `PHP`, `MySQL`, and `Bootstrap`.
 
 ## Included
 
-- Login with `Admin`, `Accounting Staff`, and `Auditor` roles
+- Login with a seeded `Admin` account
 - PPE asset register with add, edit, view, delete, and filtering
 - Automatic straight-line depreciation schedule generation
 - Dashboard, reports, and audit-style record checks
-- AI analysis page with OpenAI Responses API support and a local fallback when no API key is configured
 
 ## Local setup
 
 1. Make sure Apache and MySQL are running in XAMPP.
 2. Import [db.sql](/c:/xampp/htdocs/ppe_lapsing/db.sql) into MySQL or phpMyAdmin.
 3. Open `http://localhost/ppe_lapsing/`.
-4. Sign in with one of the seeded accounts:
+4. Sign in with the seeded admin account:
 
 - `admin@ppe.local` / `admin123`
-- `staff@ppe.local` / `staff123`
-- `auditor@ppe.local` / `auditor123`
 
-## Optional OpenAI setup
+## Optional environment setup
 
-You can place your OpenAI settings in a local `.env` file in the project root:
+You can place local database settings in a `.env` file in the project root.
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
-OPENAI_MODEL=gpt-5.5
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=ppe_ai_system
+DB_USER=root
+DB_PASS=
 ```
 
-This project now auto-loads `.env` on each request. If the key is missing, the app still saves a local rule-based analysis.
+This project auto-loads `.env` on each request.
 
-You can also override defaults with these environment variables:
+You can override defaults with these environment variables:
 
 - `DB_HOST`
 - `DB_PORT`
 - `DB_NAME`
 - `DB_USER`
 - `DB_PASS`
-- `OPENAI_MODEL`
 
 ## Main entry points
 
@@ -47,4 +46,3 @@ You can also override defaults with these environment variables:
 - [auth/login.php](/c:/xampp/htdocs/ppe_lapsing/auth/login.php)
 - [modules/dashboard.php](/c:/xampp/htdocs/ppe_lapsing/modules/dashboard.php)
 - [modules/assets.php](/c:/xampp/htdocs/ppe_lapsing/modules/assets.php)
-- [modules/ai_analysis.php](/c:/xampp/htdocs/ppe_lapsing/modules/ai_analysis.php)

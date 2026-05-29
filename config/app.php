@@ -57,7 +57,6 @@ date_default_timezone_set('Asia/Manila');
 define('APP_NAME', '');
 define('APP_ROOT', dirname(__DIR__));
 define('CURRENT_YEAR', (int) date('Y'));
-define('OPENAI_MODEL', getenv('OPENAI_MODEL') ?: 'gpt-5.5');
 
 $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? APP_ROOT;
 $resolvedDocumentRoot = is_string($documentRoot) ? (realpath($documentRoot) ?: APP_ROOT) : APP_ROOT;
@@ -76,5 +75,4 @@ define('BASE_URL', $baseUrl);
 require_once APP_ROOT . '/includes/helpers.php';
 require_once APP_ROOT . '/config/database.php';
 require_once APP_ROOT . '/functions/depreciation_function.php';
-require_once APP_ROOT . '/functions/ai_function.php';
 require_once APP_ROOT . '/includes/auth.php';

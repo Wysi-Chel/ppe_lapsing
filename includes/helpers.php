@@ -76,11 +76,6 @@ function format_date(?string $date, string $format = 'M d, Y'): string
     return $timestamp ? date($format, $timestamp) : 'Invalid date';
 }
 
-function format_analysis_text(string $text): string
-{
-    return nl2br(e(trim($text)));
-}
-
 function status_badge_class(string $status): string
 {
     return match ($status) {
@@ -99,11 +94,6 @@ function condition_badge_class(string $condition): string
         'Critical' => 'text-bg-danger',
         default => 'text-bg-light',
     };
-}
-
-function analysis_badge_class(string $analysisType): string
-{
-    return stripos($analysisType, 'openai') !== false ? 'text-bg-primary' : 'text-bg-info';
 }
 
 function role_badge_class(string $role): string

@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $databaseError === null) {
 
 $pageTitle = 'Login';
 $pageHeading = 'Sign in';
-$pageDescription = 'Access the PPE asset dashboard, schedules, and AI analysis tools.';
+$pageDescription = 'Access the PPE asset dashboard, schedules, and reports.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -44,9 +44,9 @@ require_once APP_ROOT . '/includes/header.php';
                 <i class="bi bi-stars"></i>
                 Straight-line depreciation system
             </span>
-            <h1 class="auth-title">Track PPE records, depreciation, and analysis in one place.</h1>
+            <h1 class="auth-title">Track PPE records, depreciation, and reports in one place.</h1>
             <p class="auth-copy mb-0">
-                Manage acquisition cost, useful life, carrying amount, and review notes for admins, accounting staff, and auditors.
+                Manage acquisition cost, useful life, carrying amount, and review notes from one administrator account.
             </p>
         </div>
 
@@ -64,8 +64,8 @@ require_once APP_ROOT . '/includes/header.php';
                 <p class="feature-copy mb-0">Check unusual salvage values, fully depreciated active assets, and missing setup details more easily.</p>
             </article>
             <article class="feature-card">
-                <strong>Analysis report</strong>
-                <p class="feature-copy mb-0">Generate a written PPE summary with OpenAI or use the built-in fallback analysis.</p>
+                <strong>Reports view</strong>
+                <p class="feature-copy mb-0">Review category totals, department allocations, and assets that need follow-up from one page.</p>
             </article>
         </div>
     </section>
@@ -74,7 +74,7 @@ require_once APP_ROOT . '/includes/header.php';
         <div>
             <p class="eyebrow mb-2">Login</p>
             <h2 class="auth-title h3 mb-2">Log in to continue</h2>
-            <p class="text-soft mb-0">Use the seeded demo accounts below or replace them after setup.</p>
+            <p class="text-soft mb-0">Use the seeded admin account below or replace it after setup.</p>
         </div>
 
         <?php if ($databaseError !== null): ?>
@@ -106,13 +106,11 @@ require_once APP_ROOT . '/includes/header.php';
 
         <div class="helper-card">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>Seeded demo accounts</strong>
+                <strong>Seeded admin account</strong>
                 <span class="badge text-bg-dark">for local testing</span>
             </div>
             <div class="stack-gap">
                 <div class="kpi-inline"><i class="bi bi-person-badge"></i><span><strong>Admin:</strong> admin@ppe.local / admin123</span></div>
-                <div class="kpi-inline"><i class="bi bi-pencil-square"></i><span><strong>Staff:</strong> staff@ppe.local / staff123</span></div>
-                <div class="kpi-inline"><i class="bi bi-search"></i><span><strong>Auditor:</strong> auditor@ppe.local / auditor123</span></div>
             </div>
         </div>
     </section>

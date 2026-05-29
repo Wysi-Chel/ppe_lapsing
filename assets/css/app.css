@@ -525,12 +525,6 @@ body {
     font-size: 0.92rem;
 }
 
-.analysis-output {
-    white-space: pre-wrap;
-    line-height: 1.7;
-    color: #eef7ff;
-}
-
 .empty-state {
     padding: 26px;
     border: 1px dashed var(--line-strong);
