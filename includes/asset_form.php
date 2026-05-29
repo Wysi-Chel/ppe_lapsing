@@ -76,6 +76,10 @@ declare(strict_types=1);
                 <input class="form-control" id="acquisition_cost" name="acquisition_cost" type="number" step="0.01" min="0.01" inputmode="decimal" value="<?= e((string) ($form['acquisition_cost'] ?? '')) ?>" placeholder="0.00" required>
             </div>
             <div class="col-md-4">
+                <label class="form-label" for="additional_amount">Additional</label>
+                <input class="form-control" id="additional_amount" name="additional_amount" type="number" step="0.01" min="0" inputmode="decimal" value="<?= e((string) ($form['additional_amount'] ?? '0')) ?>" placeholder="0.00">
+            </div>
+            <div class="col-md-4">
                 <label class="form-label" for="salvage_value">Salvage value</label>
                 <input class="form-control" id="salvage_value" name="salvage_value" type="number" step="0.01" min="0" inputmode="decimal" value="<?= e((string) ($form['salvage_value'] ?? '0')) ?>" placeholder="0.00">
             </div>

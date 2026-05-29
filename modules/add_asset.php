@@ -16,6 +16,7 @@ $errors = [];
 $form = normalize_asset_payload([
     'status' => 'Active',
     'depreciation_method' => 'Straight-line',
+    'additional_amount' => 0,
     'salvage_value' => 0,
 ]);
 

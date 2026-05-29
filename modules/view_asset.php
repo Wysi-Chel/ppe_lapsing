@@ -41,6 +41,11 @@ require_once APP_ROOT . '/includes/header.php';
         <p class="metric-meta mb-0">Purchased on <?= e(format_date((string) $asset['acquisition_date'])) ?></p>
     </section>
     <section class="metric-card">
+        <p class="metric-label mb-2">Salvage Value</p>
+        <h2 class="metric-value mb-1"><?= e(money((float) $asset['salvage_value'])) ?></h2>
+        <p class="metric-meta mb-0">Expected residual value</p>
+    </section>
+    <section class="metric-card">
         <p class="metric-label mb-2">Useful Life</p>
         <h2 class="metric-value mb-1"><?= e((string) $asset['useful_life']) ?> years</h2>
         <p class="metric-meta mb-0">Applied straight-line period</p>
@@ -71,6 +76,7 @@ require_once APP_ROOT . '/includes/header.php';
                         <tr><th>Category</th><td><?= e((string) ($asset['category_name'] ?? 'Uncategorized')) ?></td></tr>
                         <tr><th>Department</th><td><?= e((string) ($asset['department_name'] ?? 'Unassigned')) ?></td></tr>
                         <tr><th>Location</th><td><?= e((string) ($asset['location'] ?? 'Not specified')) ?></td></tr>
+                        <tr><th>Additional</th><td><?= e(money((float) ($asset['additional_amount'] ?? 0))) ?></td></tr>
                         <tr><th>Useful life</th><td><?= e((string) $asset['useful_life']) ?> years</td></tr>
                         <tr><th>Salvage value</th><td><?= e(money((float) $asset['salvage_value'])) ?></td></tr>
                         <tr><th>Method</th><td><?= e($asset['depreciation_method']) ?></td></tr>
@@ -110,7 +116,7 @@ require_once APP_ROOT . '/includes/header.php';
                 <div>
                     <p class="eyebrow mb-2">Generated schedule</p>
                     <h2 class="section-title mb-1">Yearly lapsing table</h2>
-                    <p class="section-copy mb-0">The purchase year is shown as the opening row, then annual depreciation begins in the following year.</p>
+                    <p class="section-copy mb-0">The purchase year is shown as the opening row, with salvage already deducted from net value. Annual depreciation begins in the following year.</p>
                 </div>
                 <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
             </div>
@@ -131,10 +137,10 @@ require_once APP_ROOT . '/includes/header.php';
                             <tr>
                                 <td><?= e((string) $row['depreciation_year']) ?></td>
                                 <td><?= e(money((float) $asset['acquisition_cost'])) ?></td>
-                                <td><?= e(money(0.0)) ?></td>
+                                <td><?= e(money((float) ($asset['additional_amount'] ?? 0))) ?></td>
                                 <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
                                 <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
-                                <td><?= e(money((float) $row['ending_value'])) ?></td>
+                                <td><?= e(money(schedule_display_net_value($asset, $row))) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

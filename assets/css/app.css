@@ -462,8 +462,15 @@ html[data-theme="light"] .empty-state {
 .metric-grid,
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 18px;
+}
+
+.metric-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .metric-card {

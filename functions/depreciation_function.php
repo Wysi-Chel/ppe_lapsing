@@ -116,6 +116,14 @@ function fetch_assets(PDO $pdo, array $filters = []): array
     return $statement->fetchAll() ?: [];
 }
 
+function asset_total_cost(array $asset): float
+{
+    return round(
+        (float) ($asset['acquisition_cost'] ?? 0) + (float) ($asset['additional_amount'] ?? 0),
+        2
+    );
+}
+
 function normalize_asset_payload(array $input): array
 {
     return [
@@ -125,6 +133,7 @@ function normalize_asset_payload(array $input): array
         'department_id' => ($input['department_id'] ?? '') !== '' ? (int) $input['department_id'] : null,
         'acquisition_date' => trim((string) ($input['acquisition_date'] ?? '')),
         'acquisition_cost' => (float) ($input['acquisition_cost'] ?? 0),
+        'additional_amount' => (float) ($input['additional_amount'] ?? 0),
         'salvage_value' => (float) ($input['salvage_value'] ?? 0),
         'useful_life' => (int) ($input['useful_life'] ?? 0),
         'depreciation_method' => trim((string) ($input['depreciation_method'] ?? 'Straight-line')) ?: 'Straight-line',
@@ -154,12 +163,16 @@ function validate_asset_payload(array $payload): array
         $errors[] = 'Acquisition cost must be greater than zero.';
     }
 
+    if ($payload['additional_amount'] < 0) {
+        $errors[] = 'Additional amount cannot be negative.';
+    }
+
     if ($payload['salvage_value'] < 0) {
         $errors[] = 'Salvage value cannot be negative.';
     }
 
-    if ($payload['salvage_value'] > $payload['acquisition_cost']) {
-        $errors[] = 'Salvage value cannot exceed acquisition cost.';
+    if ($payload['salvage_value'] > ($payload['acquisition_cost'] + $payload['additional_amount'])) {
+        $errors[] = 'Salvage value cannot exceed the total of acquisition cost and additional amount.';
     }
 
     if ($payload['useful_life'] <= 0) {
@@ -178,11 +191,11 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
     $query = $assetId === null
         ? 'INSERT INTO assets (
                 asset_code, asset_name, category_id, department_id, acquisition_date,
-                acquisition_cost, salvage_value, useful_life, depreciation_method,
+                acquisition_cost, additional_amount, salvage_value, useful_life, depreciation_method,
                 location, status, remarks
             ) VALUES (
                 :asset_code, :asset_name, :category_id, :department_id, :acquisition_date,
-                :acquisition_cost, :salvage_value, :useful_life, :depreciation_method,
+                :acquisition_cost, :additional_amount, :salvage_value, :useful_life, :depreciation_method,
                 :location, :status, :remarks
             )'
         : 'UPDATE assets SET
@@ -192,6 +205,7 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
                 department_id = :department_id,
                 acquisition_date = :acquisition_date,
                 acquisition_cost = :acquisition_cost,
+                additional_amount = :additional_amount,
                 salvage_value = :salvage_value,
                 useful_life = :useful_life,
                 depreciation_method = :depreciation_method,
@@ -238,9 +252,20 @@ function calculate_annual_depreciation(float $cost, float $salvageValue, int $us
     return round(($cost - $salvageValue) / $usefulLife, 2);
 }
 
+function schedule_display_net_value(array $asset, array $row): float
+{
+    return round(
+        max(
+            (float) ($row['ending_value'] ?? 0) - (float) ($asset['salvage_value'] ?? 0),
+            0
+        ),
+        2
+    );
+}
+
 function generate_depreciation_schedule(array $asset): array
 {
-    $cost = (float) ($asset['acquisition_cost'] ?? 0);
+    $cost = asset_total_cost($asset);
     $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $usefulLife = (int) ($asset['useful_life'] ?? 0);
     $acquisitionDate = (string) ($asset['acquisition_date'] ?? '');
@@ -391,7 +416,7 @@ function fetch_depreciation_rows(PDO $pdo, int $assetId): array
 function get_asset_metrics(array $asset, ?int $year = null): array
 {
     $evaluationYear = $year ?? CURRENT_YEAR;
-    $cost = (float) ($asset['acquisition_cost'] ?? 0);
+    $cost = asset_total_cost($asset);
     $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $usefulLife = max((int) ($asset['useful_life'] ?? 0), 0);
     $annualDepreciation = calculate_annual_depreciation($cost, $salvageValue, $usefulLife);
@@ -453,7 +478,7 @@ function get_asset_metrics(array $asset, ?int $year = null): array
 function detect_asset_anomalies(array $asset, array $metrics): array
 {
     $anomalies = [];
-    $cost = (float) ($asset['acquisition_cost'] ?? 0);
+    $cost = asset_total_cost($asset);
     $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $status = (string) ($asset['status'] ?? 'Active');
 
@@ -462,7 +487,7 @@ function detect_asset_anomalies(array $asset, array $metrics): array
     }
 
     if ($salvageValue > $cost) {
-        $anomalies[] = 'Salvage value is higher than acquisition cost.';
+        $anomalies[] = 'Salvage value is higher than the total asset cost.';
     }
 
     if ($metrics['carrying_amount'] < -0.01) {
@@ -505,7 +530,7 @@ function build_dashboard_metrics(array $assets): array
     ];
 
     foreach ($assets as $asset) {
-        $metrics['total_cost'] += (float) ($asset['acquisition_cost'] ?? 0);
+        $metrics['total_cost'] += asset_total_cost($asset);
         $metrics['total_accumulated'] += (float) ($asset['accumulated_depreciation'] ?? 0);
         $metrics['total_carrying'] += (float) ($asset['carrying_amount'] ?? 0);
         $metrics['active_count'] += (($asset['status'] ?? '') === 'Active') ? 1 : 0;
@@ -539,7 +564,7 @@ function build_category_summary(array $assets): array
         }
 
         $summary[$key]['asset_count']++;
-        $summary[$key]['total_cost'] += (float) ($asset['acquisition_cost'] ?? 0);
+        $summary[$key]['total_cost'] += asset_total_cost($asset);
         $summary[$key]['total_accumulated'] += (float) ($asset['accumulated_depreciation'] ?? 0);
         $summary[$key]['total_carrying'] += (float) ($asset['carrying_amount'] ?? 0);
     }
@@ -566,7 +591,7 @@ function build_department_summary(array $assets): array
         }
 
         $summary[$key]['asset_count']++;
-        $summary[$key]['total_cost'] += (float) ($asset['acquisition_cost'] ?? 0);
+        $summary[$key]['total_cost'] += asset_total_cost($asset);
         $summary[$key]['total_carrying'] += (float) ($asset['carrying_amount'] ?? 0);
     }
 

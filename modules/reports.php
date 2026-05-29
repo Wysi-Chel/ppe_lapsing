@@ -59,7 +59,7 @@ require_once APP_ROOT . '/includes/header.php';
                                 <th>Category</th>
                                 <th>Assets</th>
                                 <th>Total Cost</th>
-                                <th>Carrying</th>
+                                <th>Net</th>
                             </tr>
                         </thead>
                         <tbody>

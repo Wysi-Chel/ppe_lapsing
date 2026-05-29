@@ -56,6 +56,11 @@ require_once APP_ROOT . '/includes/header.php';
                 <p class="metric-meta mb-0">Initial recorded cost</p>
             </section>
             <section class="metric-card">
+                <p class="metric-label mb-2">Salvage Value</p>
+                <h2 class="metric-value mb-1"><?= e(money((float) $selectedAsset['salvage_value'])) ?></h2>
+                <p class="metric-meta mb-0">Expected residual value</p>
+            </section>
+            <section class="metric-card">
                 <p class="metric-label mb-2">Useful Life</p>
                 <h2 class="metric-value mb-1"><?= e((string) $selectedAsset['useful_life']) ?> years</h2>
                 <p class="metric-meta mb-0">Applied straight-line period</p>
@@ -77,6 +82,7 @@ require_once APP_ROOT . '/includes/header.php';
                 <div>
                     <p class="eyebrow mb-2"><?= e($selectedAsset['asset_code']) ?></p>
                     <h2 class="section-title mb-1"><?= e($selectedAsset['asset_name']) ?></h2>
+                    <p class="section-copy mb-0">Net value in this table already reflects the salvage deduction from the opening year.</p>
                 </div>
                 <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
             </div>
@@ -84,12 +90,12 @@ require_once APP_ROOT . '/includes/header.php';
                 <table class="table align-middle lapsing-table">
                     <thead>
                         <tr>
-                            <th>year</th>
-                            <th>cost</th>
-                            <th>additional</th>
-                            <th>annual depreciation</th>
-                            <th>accumulated depreciation</th>
-                            <th>net value</th>
+                            <th>Year</th>
+                            <th>Cost</th>
+                            <th>Additional</th>
+                            <th>Annual Depreciation</th>
+                            <th>Accumulated Depreciation</th>
+                            <th>Net Value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,10 +103,10 @@ require_once APP_ROOT . '/includes/header.php';
                             <tr>
                                 <td><?= e((string) $row['depreciation_year']) ?></td>
                                 <td><?= e(money((float) $selectedAsset['acquisition_cost'])) ?></td>
-                                <td><?= e(money(0.0)) ?></td>
+                                <td><?= e(money((float) ($selectedAsset['additional_amount'] ?? 0))) ?></td>
                                 <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
                                 <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
-                                <td><?= e(money((float) $row['ending_value'])) ?></td>
+                                <td><?= e(money(schedule_display_net_value($selectedAsset, $row))) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

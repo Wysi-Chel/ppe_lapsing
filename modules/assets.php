@@ -138,7 +138,7 @@ require_once APP_ROOT . '/includes/header.php';
                                     <div class="text-soft small mt-1"><?= e((string) $asset['anomaly_count']) ?> flag(s)</div>
                                 <?php endif; ?>
                             </td>
-                            <td><?= e(money((float) $asset['acquisition_cost'])) ?></td>
+                            <td><?= e(money(asset_total_cost($asset))) ?></td>
                             <td><?= e(money((float) $asset['carrying_amount'])) ?></td>
                             <td>
                                 <div class="d-flex flex-wrap gap-2">
