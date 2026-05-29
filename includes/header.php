@@ -65,10 +65,6 @@ $showShell = $loggedInUser !== null;
                             <i class="bi bi-shield-check"></i>
                             <span><?= e($loggedInUser['role']) ?></span>
                         </div>
-                        <div class="user-pill">
-                            <strong><?= e($loggedInUser['full_name']) ?></strong>
-                            <small><?= e($loggedInUser['email']) ?></small>
-                        </div>  
                     </div>
                 </header>
                 <main class="content-stage">

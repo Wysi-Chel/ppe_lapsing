@@ -163,7 +163,6 @@ html[data-theme="light"] .sidebar {
 .topbar,
 .shell-card,
 .sidebar-note,
-.user-pill,
 .auth-card,
 .hero-panel {
     border: 1px solid var(--line-soft);
@@ -380,8 +379,7 @@ html[data-theme="light"] .topbar {
     justify-content: flex-end;
 }
 
-.role-pill,
-.user-pill {
+.role-pill {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 18px;
     padding: 12px 16px;
@@ -390,7 +388,6 @@ html[data-theme="light"] .topbar {
 html[data-theme="light"] .brand-block,
 html[data-theme="light"] .sidebar-note,
 html[data-theme="light"] .sidebar-action,
-html[data-theme="light"] .user-pill,
 html[data-theme="light"] .info-pill,
 html[data-theme="light"] .feature-card,
 html[data-theme="light"] .helper-card,
@@ -408,15 +405,6 @@ html[data-theme="light"] .empty-state {
     background: linear-gradient(135deg, var(--accent-2), #deb47d);
     border: none;
     font-weight: 700;
-}
-
-.user-pill {
-    display: grid;
-    gap: 2px;
-}
-
-.user-pill small {
-    color: var(--text-soft);
 }
 
 .content-stage {
