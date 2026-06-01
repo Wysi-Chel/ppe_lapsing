@@ -15,12 +15,7 @@ if (can_manage_assets()) {
 $navItems[] = ['label' => 'Exports', 'href' => 'modules/exports.php', 'icon' => 'bi-download', 'match' => ['/modules/exports.php', '/modules/export.php', '/modules/print_view.php']];
 ?>
 <aside class="sidebar">
-    <div class="brand-block">
-        <div class="brand-mark">PPE</div>
-        <div>
-            <h2 class="brand-title mb-0"><?= e(APP_NAME) ?></h2>
-        </div>
-    </div>
+    
 
     <div class="sidebar-section">
         <p class="nav-caption mb-0">Workspace</p>
