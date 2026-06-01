@@ -13,10 +13,6 @@ if (can_manage_assets()) {
 }
 
 $navItems[] = ['label' => 'Exports', 'href' => 'modules/exports.php', 'icon' => 'bi-download', 'match' => ['/modules/exports.php', '/modules/export.php', '/modules/print_view.php']];
-
-if (can_manage_users()) {
-    $navItems[] = ['label' => 'Users', 'href' => 'auth/register.php', 'icon' => 'bi-people', 'match' => '/auth/register.php'];
-}
 ?>
 <aside class="sidebar">
     <div class="brand-block">
@@ -54,8 +50,5 @@ if (can_manage_users()) {
             <span>Today</span>
             <strong><?= e(date('M d, Y')) ?></strong>
         </div>
-        <a class="btn btn-outline-light w-100" href="<?= e(base_url('auth/logout.php')) ?>">
-            <i class="bi bi-box-arrow-right me-2"></i>Log out
-        </a>
     </div>
 </aside>

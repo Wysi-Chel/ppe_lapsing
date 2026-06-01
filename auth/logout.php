@@ -4,5 +4,4 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/config/app.php';
 
 logout_user();
-set_flash('success', 'You have been logged out.');
-redirect('auth/login.php');
+redirect('modules/dashboard.php');

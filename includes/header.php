@@ -61,10 +61,6 @@ $showShell = $loggedInUser !== null;
                             <i class="bi bi-sun-fill" data-theme-toggle-icon></i>
                             <span data-theme-toggle-label>Light mode</span>
                         </button>
-                        <div class="role-pill"> 
-                            <i class="bi bi-shield-check"></i>
-                            <span><?= e($loggedInUser['role']) ?></span>
-                        </div>
                     </div>
                 </header>
                 <main class="content-stage">

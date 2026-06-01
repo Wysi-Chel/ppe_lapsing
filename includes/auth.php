@@ -1,11 +1,61 @@
 <?php
 declare(strict_types=1);
 
+function normalize_auth_user(array $user): array
+{
+    return [
+        'user_id' => isset($user['user_id']) && $user['user_id'] !== null ? (int) $user['user_id'] : null,
+        'full_name' => trim((string) ($user['full_name'] ?? 'Local Operator')) ?: 'Local Operator',
+        'email' => trim((string) ($user['email'] ?? 'local@ppe.local')) ?: 'local@ppe.local',
+        'role' => trim((string) ($user['role'] ?? 'Admin')) ?: 'Admin',
+    ];
+}
+
+function default_user(): array
+{
+    static $user = null;
+
+    if (is_array($user)) {
+        return $user;
+    }
+
+    $user = [
+        'user_id' => null,
+        'full_name' => 'Local Operator',
+        'email' => 'local@ppe.local',
+        'role' => 'Admin',
+    ];
+
+    if (db_error() !== null) {
+        return $user;
+    }
+
+    try {
+        $statement = db()->query(
+            "SELECT user_id, full_name, email, role
+             FROM users
+             ORDER BY (role = 'Admin') DESC, created_at ASC
+             LIMIT 1"
+        );
+        $databaseUser = $statement->fetch();
+
+        if ($databaseUser) {
+            $user = normalize_auth_user($databaseUser);
+        }
+    } catch (Throwable) {
+        // Direct access should continue even when the users lookup is unavailable.
+    }
+
+    return $user;
+}
+
 function current_user(): ?array
 {
-    return isset($_SESSION['auth_user']) && is_array($_SESSION['auth_user'])
-        ? $_SESSION['auth_user']
-        : null;
+    if (isset($_SESSION['auth_user']) && is_array($_SESSION['auth_user'])) {
+        return normalize_auth_user($_SESSION['auth_user']);
+    }
+
+    return default_user();
 }
 
 function is_logged_in(): bool
@@ -15,12 +65,7 @@ function is_logged_in(): bool
 
 function login_user(array $user): void
 {
-    $_SESSION['auth_user'] = [
-        'user_id' => (int) $user['user_id'],
-        'full_name' => (string) $user['full_name'],
-        'email' => (string) $user['email'],
-        'role' => (string) $user['role'],
-    ];
+    $_SESSION['auth_user'] = normalize_auth_user($user);
 }
 
 function logout_user(): void
