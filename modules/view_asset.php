@@ -14,7 +14,17 @@ if (!$asset) {
 }
 
 $metrics = get_asset_metrics($asset);
-$schedule = fetch_depreciation_rows($pdo, $assetId);
+$yearlyLapsingRows = build_asset_yearly_lapsing_rows($asset);
+$reportMonths = depreciation_summary_months();
+$formatReportAmount = static function (float|int|string|null $value, bool $blankZero = false): string {
+    $amount = round((float) $value, 2);
+
+    if ($blankZero && abs($amount) < 0.005) {
+        return '';
+    }
+
+    return number_format($amount, 2);
+};
 $transferHistory = fetch_asset_transfers($pdo, $assetId, 6);
 
 $pageTitle = 'View Asset';
@@ -27,7 +37,7 @@ require_once APP_ROOT . '/includes/header.php';
     <a class="btn btn-outline-light" href="<?= e(base_url('modules/assets.php')) ?>">
         <i class="bi bi-arrow-left me-2"></i>Back to Assets
     </a>
-    <a class="btn btn-outline-light" href="<?= e(base_url('modules/depreciation.php?asset_id=' . $assetId)) ?>">Open Depreciation View</a>
+    <a class="btn btn-outline-light" href="<?= e(base_url('modules/depreciation.php')) ?>">Open Depreciation Preview</a>
     <?php if (can_manage_assets()): ?>
         <a class="btn btn-outline-light" href="<?= e(base_url('modules/transfers.php?asset_id=' . $assetId)) ?>">
             <i class="bi bi-arrow-left-right me-2"></i>Transfer Asset
@@ -45,19 +55,14 @@ require_once APP_ROOT . '/includes/header.php';
         <p class="metric-meta mb-0">Purchased on <?= e(format_date((string) $asset['acquisition_date'])) ?></p>
     </section>
     <section class="metric-card">
-        <p class="metric-label mb-2">Salvage Value</p>
-        <h2 class="metric-value mb-1"><?= e(money((float) $asset['salvage_value'])) ?></h2>
-        <p class="metric-meta mb-0">Expected residual value</p>
-    </section>
-    <section class="metric-card">
         <p class="metric-label mb-2">Useful Life</p>
         <h2 class="metric-value mb-1"><?= e((string) $asset['useful_life']) ?> years</h2>
-        <p class="metric-meta mb-0">Applied straight-line period</p>
+        <p class="metric-meta mb-0">Applied depreciation period</p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">Depreciation Expense</p>
         <h2 class="metric-value mb-1"><?= e(money($metrics['annual_depreciation'])) ?></h2>
-        <p class="metric-meta mb-0">Recognized each year</p>
+        <p class="metric-meta mb-0">Full-year depreciation rate</p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">Net Book Value</p>
@@ -66,9 +71,9 @@ require_once APP_ROOT . '/includes/header.php';
     </section>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-5">
-        <section class="shell-card mb-4">
+<div class="row g-4 align-items-stretch mb-4">
+    <div class="col-xl-5 col-lg-6">
+        <section class="shell-card h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="section-title mb-0">Asset profile</h2>
                 <span class="badge <?= e(status_badge_class((string) $asset['status'])) ?>"><?= e($asset['status']) ?></span>
@@ -82,14 +87,15 @@ require_once APP_ROOT . '/includes/header.php';
                         <tr><th>Location</th><td><?= e((string) ($asset['location'] ?? 'Not specified')) ?></td></tr>
                         <tr><th>Additional</th><td><?= e(money((float) ($asset['additional_amount'] ?? 0))) ?></td></tr>
                         <tr><th>Useful life</th><td><?= e((string) $asset['useful_life']) ?> years</td></tr>
-                        <tr><th>Salvage value</th><td><?= e(money((float) $asset['salvage_value'])) ?></td></tr>
-                        <tr><th>Method</th><td><?= e($asset['depreciation_method']) ?></td></tr>
                         <tr><th>Remarks</th><td><?= e((string) ($asset['remarks'] ?: 'None')) ?></td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
+    </div>
+
+    <div class="col-xl-7 col-lg-6 d-flex flex-column gap-4">
         <section class="shell-card">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2 class="section-title mb-0">Condition check</h2>
@@ -113,7 +119,7 @@ require_once APP_ROOT . '/includes/header.php';
             <?php endif; ?>
         </section>
 
-        <section class="shell-card mt-4">
+        <section class="shell-card">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h2 class="section-title mb-1">Transfer history</h2>
@@ -151,48 +157,56 @@ require_once APP_ROOT . '/includes/header.php';
             <?php endif; ?>
         </section>
     </div>
+</div>
 
-    <div class="col-lg-7">
-        <section class="shell-card">
+<section class="shell-card">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <p class="eyebrow mb-2">Generated schedule</p>
                     <h2 class="section-title mb-1">Yearly lapsing table</h2>
-                    <p class="section-copy mb-0">The purchase year is shown as the opening row, with salvage already deducted from net value. Annual depreciation begins in the following year.</p>
+                    <p class="section-copy mb-0">Each year follows the report format: beginning balances, monthly depreciation, total depreciation, accumulated depreciation, and book value.</p>
                 </div>
                 <div class="stack-inline">
                     <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $assetId)) ?>">Export CSV</a>
                     <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $assetId)) ?>" target="_blank" rel="noopener">Print</a>
-                    <span class="badge text-bg-dark"><?= e((string) count($schedule)) ?> rows</span>
+                    <span class="badge text-bg-dark"><?= e((string) count($yearlyLapsingRows)) ?> rows</span>
                 </div>
             </div>
-            <div class="table-wrap">
-                <table class="table align-middle lapsing-table">
-                    <thead>
-                        <tr>
-                            <th>year</th>
-                            <th>cost</th>
-                            <th>additional</th>
-                            <th>annual depreciation</th>
-                            <th>accumulated depreciation</th>
-                            <th>net value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($schedule as $row): ?>
+            <?php if ($yearlyLapsingRows === []): ?>
+                <div class="empty-state">This asset needs a valid acquisition date and useful life before a yearly lapsing table can be generated.</div>
+            <?php else: ?>
+                <div class="table-wrap">
+                    <table class="table align-middle asset-lapsing-table">
+                        <thead>
                             <tr>
-                                <td><?= e((string) $row['depreciation_year']) ?></td>
-                                <td><?= e(money((float) $asset['acquisition_cost'])) ?></td>
-                                <td><?= e(money((float) ($asset['additional_amount'] ?? 0))) ?></td>
-                                <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
-                                <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
-                                <td><?= e(money(schedule_display_net_value($asset, $row))) ?></td>
+                                <th>Year</th>
+                                <th>Beginning Book</th>
+                                <th>Beginning Acc Dep'n</th>
+                                <?php foreach ($reportMonths as $monthName): ?>
+                                    <th><?= e($monthName) ?></th>
+                                <?php endforeach; ?>
+                                <th>Total Depreciation</th>
+                                <th>Accum Dep'n</th>
+                                <th>Book Value</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
-</div>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($yearlyLapsingRows as $row): ?>
+                                <tr>
+                                    <td><?= e((string) $row['year']) ?></td>
+                                    <td><?= e($formatReportAmount($row['book_value_prior'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($row['beginning_accumulated_depreciation'], true)) ?></td>
+                                    <?php foreach (array_keys($reportMonths) as $monthNumber): ?>
+                                        <td><?= e($formatReportAmount($row['months'][$monthNumber] ?? 0, true)) ?></td>
+                                    <?php endforeach; ?>
+                                    <td><?= e($formatReportAmount($row['total_depreciation'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($row['accumulated_depreciation'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($row['book_value'], true)) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+</section>
 <?php require_once APP_ROOT . '/includes/footer.php'; ?>

@@ -38,6 +38,20 @@ function update_user_password(PDO $pdo, int $userId, string $password): void
 
 function fetch_categories(PDO $pdo): array
 {
+    if (defined('ASSET_CATEGORY_NAMES') && ASSET_CATEGORY_NAMES !== []) {
+        $names = ASSET_CATEGORY_NAMES;
+        $placeholders = implode(', ', array_fill(0, count($names), '?'));
+        $statement = $pdo->prepare(
+            'SELECT category_id, category_name
+             FROM categories
+             WHERE category_name IN (' . $placeholders . ')
+             ORDER BY FIELD(category_name, ' . $placeholders . ')'
+        );
+        $statement->execute(array_merge($names, $names));
+
+        return $statement->fetchAll() ?: [];
+    }
+
     $statement = $pdo->query('SELECT category_id, category_name FROM categories ORDER BY category_name');
 
     return $statement->fetchAll() ?: [];
@@ -134,7 +148,7 @@ function normalize_asset_payload(array $input): array
         'acquisition_date' => trim((string) ($input['acquisition_date'] ?? '')),
         'acquisition_cost' => (float) ($input['acquisition_cost'] ?? 0),
         'additional_amount' => (float) ($input['additional_amount'] ?? 0),
-        'salvage_value' => (float) ($input['salvage_value'] ?? 0),
+        'salvage_value' => 0.0,
         'useful_life' => (int) ($input['useful_life'] ?? 0),
         'depreciation_method' => trim((string) ($input['depreciation_method'] ?? 'Straight-line')) ?: 'Straight-line',
         'location' => trim((string) ($input['location'] ?? '')),
@@ -165,14 +179,6 @@ function validate_asset_payload(array $payload): array
 
     if ($payload['additional_amount'] < 0) {
         $errors[] = 'Additional amount cannot be negative.';
-    }
-
-    if ($payload['salvage_value'] < 0) {
-        $errors[] = 'Salvage value cannot be negative.';
-    }
-
-    if ($payload['salvage_value'] > ($payload['acquisition_cost'] + $payload['additional_amount'])) {
-        $errors[] = 'Salvage value cannot exceed the total of acquisition cost and additional amount.';
     }
 
     if ($payload['useful_life'] <= 0) {
@@ -243,30 +249,305 @@ function delete_asset(PDO $pdo, int $assetId): void
     $statement->execute(['asset_id' => $assetId]);
 }
 
-function calculate_annual_depreciation(float $cost, float $salvageValue, int $usefulLife): float
+function calculate_annual_depreciation(float $cost, int $usefulLife): float
 {
-    if ($usefulLife <= 0 || $cost <= $salvageValue) {
+    if ($usefulLife <= 0 || $cost <= 0) {
         return 0.0;
     }
 
-    return round(($cost - $salvageValue) / $usefulLife, 2);
+    return round($cost / $usefulLife, 2);
 }
 
 function schedule_display_net_value(array $asset, array $row): float
 {
-    return round(
-        max(
-            (float) ($row['ending_value'] ?? 0) - (float) ($asset['salvage_value'] ?? 0),
-            0
-        ),
-        2
+    return round(max((float) ($row['ending_value'] ?? 0), 0), 2);
+}
+
+function normalize_depreciation_summary_year(mixed $year): int
+{
+    $candidate = filter_var($year, FILTER_VALIDATE_INT);
+
+    if ($candidate === false || $candidate < 1900 || $candidate > 2200) {
+        return CURRENT_YEAR;
+    }
+
+    return (int) $candidate;
+}
+
+function depreciation_summary_period_label(int $year): string
+{
+    return 'AS OF DECEMBER 31, ' . $year;
+}
+
+function depreciation_summary_months(): array
+{
+    return [
+        1 => 'January',
+        2 => 'February',
+        3 => 'March',
+        4 => 'April',
+        5 => 'May',
+        6 => 'June',
+        7 => 'July',
+        8 => 'August',
+        9 => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December',
+    ];
+}
+
+function depreciation_summary_total_template(string $label): array
+{
+    return [
+        'label' => $label,
+        'asset_count' => 0,
+        'cost' => 0.0,
+        'additions' => 0.0,
+        'adjusted_cost' => 0.0,
+        'monthly_depreciation' => 0.0,
+        'book_value_prior' => 0.0,
+        'beginning_accumulated_depreciation' => 0.0,
+        'months' => array_fill_keys(array_keys(depreciation_summary_months()), 0.0),
+        'total_depreciation' => 0.0,
+        'accumulated_depreciation' => 0.0,
+        'book_value' => 0.0,
+    ];
+}
+
+function depreciation_summary_add_to_total(array &$total, array $row): void
+{
+    $total['asset_count']++;
+
+    foreach ([
+        'cost',
+        'additions',
+        'adjusted_cost',
+        'monthly_depreciation',
+        'book_value_prior',
+        'beginning_accumulated_depreciation',
+        'total_depreciation',
+        'accumulated_depreciation',
+        'book_value',
+    ] as $field) {
+        $total[$field] += (float) ($row[$field] ?? 0);
+    }
+
+    foreach (array_keys(depreciation_summary_months()) as $monthNumber) {
+        $total['months'][$monthNumber] += (float) ($row['months'][$monthNumber] ?? 0);
+    }
+}
+
+function depreciation_summary_round_total(array $total): array
+{
+    foreach ([
+        'cost',
+        'additions',
+        'adjusted_cost',
+        'monthly_depreciation',
+        'book_value_prior',
+        'beginning_accumulated_depreciation',
+        'total_depreciation',
+        'accumulated_depreciation',
+        'book_value',
+    ] as $field) {
+        $total[$field] = round((float) $total[$field], 2);
+    }
+
+    foreach (array_keys(depreciation_summary_months()) as $monthNumber) {
+        $total['months'][$monthNumber] = round((float) ($total['months'][$monthNumber] ?? 0), 2);
+    }
+
+    return $total;
+}
+
+function calculate_depreciation_summary_asset(array $asset, int $year): array
+{
+    $cost = round((float) ($asset['acquisition_cost'] ?? 0), 2);
+    $additions = round((float) ($asset['additional_amount'] ?? 0), 2);
+    $adjustedCost = round($cost + $additions, 2);
+    $usefulLife = (int) ($asset['useful_life'] ?? 0);
+    $acquisitionTimestamp = strtotime((string) ($asset['acquisition_date'] ?? ''));
+    $monthlyDepreciation = 0.0;
+    $currentYearMonths = 0;
+    $accumulatedMonths = 0;
+    $beginningAccumulated = 0.0;
+    $bookValuePrior = 0.0;
+    $monthlyValues = array_fill_keys(array_keys(depreciation_summary_months()), 0.0);
+
+    if ($adjustedCost > 0 && $usefulLife > 0 && $acquisitionTimestamp !== false) {
+        $totalMonths = $usefulLife * 12;
+        $monthlyDepreciation = $adjustedCost / $totalMonths;
+        $acquisitionMonthIndex = ((int) date('Y', $acquisitionTimestamp) * 12) + ((int) date('n', $acquisitionTimestamp) - 1);
+        $startMonthIndex = $acquisitionMonthIndex + 1;
+        $endMonthIndex = $startMonthIndex + $totalMonths - 1;
+        $yearStartMonthIndex = $year * 12;
+        $yearEndMonthIndex = $yearStartMonthIndex + 11;
+        $priorYearEndMonthIndex = $yearStartMonthIndex - 1;
+        $existedBeforeYear = $acquisitionMonthIndex <= $priorYearEndMonthIndex;
+
+        if ($existedBeforeYear) {
+            $priorAccumulatedMonths = 0;
+            $priorAccumulatedPeriodEnd = min($endMonthIndex, $priorYearEndMonthIndex);
+
+            if ($priorAccumulatedPeriodEnd >= $startMonthIndex) {
+                $priorAccumulatedMonths = ($priorAccumulatedPeriodEnd - $startMonthIndex) + 1;
+            }
+
+            $beginningAccumulated = min($adjustedCost, $monthlyDepreciation * $priorAccumulatedMonths);
+            $bookValuePrior = max($adjustedCost - $beginningAccumulated, 0);
+        }
+
+        $currentPeriodStart = max($startMonthIndex, $yearStartMonthIndex);
+        $currentPeriodEnd = min($endMonthIndex, $yearEndMonthIndex);
+        if ($currentPeriodEnd >= $currentPeriodStart) {
+            $currentYearMonths = ($currentPeriodEnd - $currentPeriodStart) + 1;
+        }
+
+        $accumulatedPeriodEnd = min($endMonthIndex, $yearEndMonthIndex);
+        if ($accumulatedPeriodEnd >= $startMonthIndex) {
+            $accumulatedMonths = ($accumulatedPeriodEnd - $startMonthIndex) + 1;
+        }
+
+        foreach (array_keys(depreciation_summary_months()) as $monthNumber) {
+            $monthIndex = $yearStartMonthIndex + ($monthNumber - 1);
+
+            if ($monthIndex < $startMonthIndex || $monthIndex > $endMonthIndex) {
+                continue;
+            }
+
+            $accumulatedBeforeMonth = min(
+                $adjustedCost,
+                $monthlyDepreciation * max($monthIndex - $startMonthIndex, 0)
+            );
+            $remainingBeforeMonth = max($adjustedCost - $accumulatedBeforeMonth, 0);
+            $monthlyValues[$monthNumber] = min($monthlyDepreciation, $remainingBeforeMonth);
+        }
+    }
+
+    $totalDepreciation = array_sum($monthlyValues);
+    $accumulated = min($adjustedCost, $beginningAccumulated + $totalDepreciation);
+    $roundedMonthlyValues = [];
+    foreach ($monthlyValues as $monthNumber => $value) {
+        $roundedMonthlyValues[$monthNumber] = round((float) $value, 2);
+    }
+
+    return [
+        'asset_id' => (int) ($asset['asset_id'] ?? 0),
+        'asset_code' => (string) ($asset['asset_code'] ?? ''),
+        'asset_name' => (string) ($asset['asset_name'] ?? ''),
+        'particulars' => (string) ($asset['asset_name'] ?? ''),
+        'category_name' => trim((string) ($asset['category_name'] ?? '')) ?: 'Uncategorized',
+        'acquisition_date' => (string) ($asset['acquisition_date'] ?? ''),
+        'useful_life' => $usefulLife,
+        'date_disposed_others' => (($asset['status'] ?? '') !== 'Active') ? (string) ($asset['status'] ?? '') : '',
+        'remaining_useful_months' => max(($usefulLife * 12) - $accumulatedMonths, 0),
+        'ref' => (string) ($asset['asset_code'] ?? ''),
+        'cost' => round($cost, 2),
+        'additions' => round($additions, 2),
+        'adjusted_cost' => round($adjustedCost, 2),
+        'monthly_depreciation' => round($monthlyDepreciation, 2),
+        'book_value_prior' => round($bookValuePrior, 2),
+        'beginning_accumulated_depreciation' => round($beginningAccumulated, 2),
+        'months' => $roundedMonthlyValues,
+        'total_depreciation' => round($totalDepreciation, 2),
+        'accumulated_depreciation' => round($accumulated, 2),
+        'book_value' => round(max($adjustedCost - $accumulated, 0), 2),
+        'current_year_months' => $currentYearMonths,
+        'accumulated_months' => $accumulatedMonths,
+    ];
+}
+
+function build_depreciation_summary(array $assets, int $year): array
+{
+    $groups = [];
+    $total = depreciation_summary_total_template('TOTAL');
+    $yearEndTimestamp = strtotime($year . '-12-31');
+
+    foreach ($assets as $asset) {
+        $acquisitionTimestamp = strtotime((string) ($asset['acquisition_date'] ?? ''));
+        if ($acquisitionTimestamp !== false && $yearEndTimestamp !== false && $acquisitionTimestamp > $yearEndTimestamp) {
+            continue;
+        }
+
+        $summaryAsset = calculate_depreciation_summary_asset($asset, $year);
+        $key = $summaryAsset['category_name'];
+
+        if (!isset($groups[$key])) {
+            $groups[$key] = [
+                'label' => $key,
+                'rows' => [],
+                'total' => depreciation_summary_total_template('Total'),
+            ];
+        }
+
+        $groups[$key]['rows'][] = $summaryAsset;
+        depreciation_summary_add_to_total($groups[$key]['total'], $summaryAsset);
+        depreciation_summary_add_to_total($total, $summaryAsset);
+    }
+
+    foreach ($groups as &$group) {
+        usort(
+            $group['rows'],
+            static fn (array $left, array $right): int => strnatcasecmp((string) $left['particulars'], (string) $right['particulars'])
+        );
+        $group['total'] = depreciation_summary_round_total($group['total']);
+    }
+    unset($group);
+
+    uasort(
+        $groups,
+        static fn (array $left, array $right): int => strnatcasecmp((string) $left['label'], (string) $right['label'])
     );
+
+    $flatRows = [];
+    foreach ($groups as $group) {
+        foreach ($group['rows'] as $row) {
+            $flatRows[] = $row;
+        }
+    }
+
+    return [
+        'year' => $year,
+        'period_label' => depreciation_summary_period_label($year),
+        'prior_book_value_label' => 'Dec-' . substr((string) ($year - 1), -2),
+        'accumulated_label' => 'DEPN ' . $year,
+        'book_value_label' => 'VALUE ' . $year,
+        'months' => depreciation_summary_months(),
+        'groups' => array_values($groups),
+        'rows' => $flatRows,
+        'total' => depreciation_summary_round_total($total),
+    ];
+}
+
+function build_asset_yearly_lapsing_rows(array $asset): array
+{
+    $usefulLife = (int) ($asset['useful_life'] ?? 0);
+    $acquisitionTimestamp = strtotime((string) ($asset['acquisition_date'] ?? ''));
+
+    if ($usefulLife <= 0 || $acquisitionTimestamp === false) {
+        return [];
+    }
+
+    $acquisitionYear = (int) date('Y', $acquisitionTimestamp);
+    $acquisitionMonthIndex = ($acquisitionYear * 12) + ((int) date('n', $acquisitionTimestamp) - 1);
+    $startMonthIndex = $acquisitionMonthIndex + 1;
+    $endMonthIndex = $startMonthIndex + ($usefulLife * 12) - 1;
+    $endYear = intdiv($endMonthIndex, 12);
+    $rows = [];
+
+    for ($year = $acquisitionYear; $year <= $endYear; $year++) {
+        $row = calculate_depreciation_summary_asset($asset, $year);
+        $row['year'] = $year;
+        $rows[] = $row;
+    }
+
+    return $rows;
 }
 
 function generate_depreciation_schedule(array $asset): array
 {
     $cost = asset_total_cost($asset);
-    $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $usefulLife = (int) ($asset['useful_life'] ?? 0);
     $acquisitionDate = (string) ($asset['acquisition_date'] ?? '');
 
@@ -275,37 +556,20 @@ function generate_depreciation_schedule(array $asset): array
     }
 
     $acquisitionYear = (int) date('Y', strtotime($acquisitionDate));
-    $depreciationStartYear = $acquisitionYear + 1;
-    $depreciableBase = max($cost - $salvageValue, 0);
-    $annualDepreciation = calculate_annual_depreciation($cost, $salvageValue, $usefulLife);
-    $accumulated = 0.0;
-    $schedule = [
-        [
-            'depreciation_year' => $acquisitionYear,
-            'beginning_value' => round($cost, 2),
-            'depreciation_expense' => 0.0,
-            'accumulated_depreciation' => 0.0,
-            'ending_value' => round($cost, 2),
-        ],
-    ];
+    $schedule = [];
 
-    for ($index = 0; $index < $usefulLife; $index++) {
-        $year = $depreciationStartYear + $index;
-        $beginningValue = round($cost - $accumulated, 2);
-        $remainingDepreciableBase = round($depreciableBase - $accumulated, 2);
-        $expense = $index === ($usefulLife - 1)
-            ? max($remainingDepreciableBase, 0)
-            : min($annualDepreciation, max($remainingDepreciableBase, 0));
-
-        $accumulated = round($accumulated + $expense, 2);
-        $endingValue = round(max($cost - $accumulated, $salvageValue), 2);
+    foreach (build_asset_yearly_lapsing_rows($asset) as $row) {
+        $year = (int) $row['year'];
+        $beginningValue = $year === $acquisitionYear
+            ? $cost
+            : (float) $row['book_value_prior'];
 
         $schedule[] = [
             'depreciation_year' => $year,
-            'beginning_value' => $beginningValue,
-            'depreciation_expense' => round($expense, 2),
-            'accumulated_depreciation' => $accumulated,
-            'ending_value' => $endingValue,
+            'beginning_value' => round($beginningValue, 2),
+            'depreciation_expense' => round((float) $row['total_depreciation'], 2),
+            'accumulated_depreciation' => round((float) $row['accumulated_depreciation'], 2),
+            'ending_value' => round((float) $row['book_value'], 2),
         ];
     }
 
@@ -417,14 +681,13 @@ function get_asset_metrics(array $asset, ?int $year = null): array
 {
     $evaluationYear = $year ?? CURRENT_YEAR;
     $cost = asset_total_cost($asset);
-    $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $usefulLife = max((int) ($asset['useful_life'] ?? 0), 0);
-    $annualDepreciation = calculate_annual_depreciation($cost, $salvageValue, $usefulLife);
+    $annualDepreciation = calculate_annual_depreciation($cost, $usefulLife);
     $schedule = generate_depreciation_schedule($asset);
+    $evaluationSummary = calculate_depreciation_summary_asset($asset, $evaluationYear);
     $acquisitionYear = strtotime((string) ($asset['acquisition_date'] ?? '')) !== false
         ? (int) date('Y', strtotime((string) $asset['acquisition_date']))
         : CURRENT_YEAR;
-    $depreciationStartYear = $acquisitionYear + 1;
 
     $selectedRow = null;
     foreach ($schedule as $row) {
@@ -437,16 +700,17 @@ function get_asset_metrics(array $asset, ?int $year = null): array
         $selectedRow = end($schedule);
     }
 
-    $elapsedYears = 0;
-    if ($evaluationYear >= $depreciationStartYear && $usefulLife > 0) {
-        $elapsedYears = min(($evaluationYear - $depreciationStartYear) + 1, $usefulLife);
-    }
-
     $accumulated = $selectedRow['accumulated_depreciation'] ?? 0.0;
     $carryingAmount = $selectedRow['ending_value'] ?? $cost;
-    $remainingYears = max($usefulLife - $elapsedYears, 0);
-    $lifeUsedRatio = $usefulLife > 0 ? min($elapsedYears / $usefulLife, 1) : 0.0;
-    $isFullyDepreciated = $usefulLife > 0 && ($carryingAmount <= ($salvageValue + 0.01) || $elapsedYears >= $usefulLife);
+    $totalMonths = $usefulLife * 12;
+    $elapsedMonths = $totalMonths > 0
+        ? min(max((int) ($evaluationSummary['accumulated_months'] ?? 0), 0), $totalMonths)
+        : 0;
+    $remainingMonths = max($totalMonths - $elapsedMonths, 0);
+    $elapsedYears = $totalMonths > 0 ? (int) floor($elapsedMonths / 12) : 0;
+    $remainingYears = $totalMonths > 0 ? (int) ceil($remainingMonths / 12) : 0;
+    $lifeUsedRatio = $totalMonths > 0 ? min($elapsedMonths / $totalMonths, 1) : 0.0;
+    $isFullyDepreciated = $usefulLife > 0 && ($carryingAmount <= 0.01 || $elapsedMonths >= $totalMonths);
 
     $condition = 'Healthy';
     if ($isFullyDepreciated || $remainingYears === 0) {
@@ -465,8 +729,8 @@ function get_asset_metrics(array $asset, ?int $year = null): array
         'is_fully_depreciated' => $isFullyDepreciated,
         'condition' => $condition,
         'schedule_rows' => $schedule,
-        'schedule_year_start' => $schedule[0]['depreciation_year'] ?? $depreciationStartYear,
-        'schedule_year_end' => $schedule !== [] ? end($schedule)['depreciation_year'] : $depreciationStartYear,
+        'schedule_year_start' => $schedule[0]['depreciation_year'] ?? $acquisitionYear,
+        'schedule_year_end' => $schedule !== [] ? end($schedule)['depreciation_year'] : $acquisitionYear,
     ];
 
     $metrics['anomalies'] = detect_asset_anomalies($asset, $metrics);
@@ -479,15 +743,10 @@ function detect_asset_anomalies(array $asset, array $metrics): array
 {
     $anomalies = [];
     $cost = asset_total_cost($asset);
-    $salvageValue = (float) ($asset['salvage_value'] ?? 0);
     $status = (string) ($asset['status'] ?? 'Active');
 
     if ((int) ($asset['useful_life'] ?? 0) <= 0) {
         $anomalies[] = 'Useful life is missing or invalid.';
-    }
-
-    if ($salvageValue > $cost) {
-        $anomalies[] = 'Salvage value is higher than the total asset cost.';
     }
 
     if ($metrics['carrying_amount'] < -0.01) {

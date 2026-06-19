@@ -14,6 +14,18 @@ $transfers = [];
 $asset = null;
 $schedule = [];
 $metrics = null;
+$summaryYear = CURRENT_YEAR;
+$selectedCategoryId = 0;
+$depreciationSummary = null;
+$formatReportAmount = static function (float|int|string|null $value, bool $blankZero = false): string {
+    $amount = round((float) $value, 2);
+
+    if ($blankZero && abs($amount) < 0.005) {
+        return '';
+    }
+
+    return number_format($amount, 2);
+};
 
 switch ($type) {
     case 'assets':
@@ -32,6 +44,14 @@ switch ($type) {
         $transfers = fetch_asset_transfers($pdo);
         break;
 
+    case 'depreciation_summary':
+        $summaryYear = normalize_depreciation_summary_year(request_value('year', CURRENT_YEAR));
+        $selectedCategoryId = (int) request_value('category_id', 0);
+        $summaryFilters = $selectedCategoryId > 0 ? ['category_id' => $selectedCategoryId] : [];
+        $title = 'Lapsing Schedule of Property and Equipment - ' . $summaryYear;
+        $depreciationSummary = build_depreciation_summary(fetch_assets($pdo, $summaryFilters), $summaryYear);
+        break;
+
     case 'schedule':
         $assetId = (int) request_value('asset_id', 0);
         $asset = fetch_asset_by_id($pdo, $assetId);
@@ -42,13 +62,24 @@ switch ($type) {
         }
 
         $title = 'Depreciation Schedule - ' . $asset['asset_code'];
-        $schedule = fetch_depreciation_rows($pdo, $assetId);
+        $schedule = build_asset_yearly_lapsing_rows($asset);
         $metrics = get_asset_metrics($asset);
         break;
 
     default:
         set_flash('danger', 'That print view is not available.');
         redirect('modules/exports.php');
+}
+
+$exportsBackPath = 'modules/exports.php';
+if ($asset) {
+    $exportsBackPath .= '?asset_id=' . (int) $asset['asset_id'];
+} elseif ($type === 'depreciation_summary') {
+    $exportsBackParams = ['year' => $summaryYear];
+    if ($selectedCategoryId > 0) {
+        $exportsBackParams['category_id'] = $selectedCategoryId;
+    }
+    $exportsBackPath .= '?' . http_build_query($exportsBackParams);
 }
 ?>
 <!doctype html>
@@ -158,7 +189,125 @@ switch ($type) {
             color: #666666;
         }
 
+        .report-fullscreen {
+            background: #ffffff;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .report-fullscreen .sheet {
+            width: 100vw;
+            min-height: 100vh;
+            max-width: none;
+            border: 0;
+            box-shadow: none;
+            padding: 10px;
+        }
+
+        .report-fullscreen .toolbar {
+            margin: 0 0 8px;
+        }
+
+        .report-fullscreen header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .report-fullscreen h1 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .report-fullscreen header p {
+            margin: 0;
+            font-size: 10px;
+        }
+
+        .report-fullscreen .meta {
+            margin: 0 0 6px;
+            font-size: 10px;
+        }
+
+        .report-fullscreen .summary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin: 6px 0;
+        }
+
+        .report-fullscreen .summary-card {
+            padding: 6px 8px;
+            font-size: 10px;
+        }
+
+        .print-table-wrap {
+            width: 100%;
+            overflow: visible;
+        }
+
+        .depreciation-report-table {
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
+            font-size: clamp(5.2px, 0.48vw, 7px);
+            line-height: 1.12;
+            margin-top: 6px;
+        }
+
+        .depreciation-report-table th,
+        .depreciation-report-table td {
+            padding: 2px 2px;
+            text-align: center;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            vertical-align: middle;
+        }
+
+        .depreciation-report-table td:first-child,
+        .depreciation-report-table th:first-child {
+            text-align: left;
+        }
+
+        .report-category-row th {
+            background: #e8edf7;
+            color: #111111;
+            text-transform: uppercase;
+        }
+
+        .report-total-row th,
+        .report-grand-total-row th {
+            background: #f7f2dc;
+            color: #111111;
+        }
+
+        .report-grand-total-row th {
+            border-top: 2px solid #111111;
+        }
+
+        .report-highlight-yellow {
+            background: #fff45c !important;
+        }
+
+        .report-highlight-red {
+            background: #f2c8c8 !important;
+        }
+
+        .report-highlight-green {
+            background: #dfead4 !important;
+        }
+
+        .report-highlight-peach {
+            background: #f4dccb !important;
+        }
+
         @media print {
+            @page {
+                size: landscape;
+                margin: 8mm;
+            }
+
             body {
                 background: #ffffff;
                 padding: 0;
@@ -182,11 +331,11 @@ switch ($type) {
         }
     </style>
 </head>
-<body>
+<body class="<?= $type === 'depreciation_summary' ? 'report-fullscreen' : '' ?>">
     <div class="sheet">
         <div class="toolbar">
             <a class="btn" href="javascript:window.print()">Print</a>
-            <a class="btn" href="<?= e(base_url('modules/exports.php' . ($asset ? '?asset_id=' . $asset['asset_id'] : ''))) ?>">Back to Exports</a>
+            <a class="btn" href="<?= e(base_url($exportsBackPath)) ?>">Back to Exports</a>
         </div>
 
         <header>
@@ -379,6 +528,149 @@ switch ($type) {
                     </tbody>
                 </table>
             <?php endif; ?>
+        <?php elseif ($type === 'depreciation_summary' && $depreciationSummary): ?>
+            <p class="meta"><?= e($depreciationSummary['period_label']) ?></p>
+            <div class="summary">
+                <div class="summary-card">
+                    <strong>Total assets</strong>
+                    <span><?= e((string) $depreciationSummary['total']['asset_count']) ?></span>
+                </div>
+                <div class="summary-card">
+                    <strong>Adjusted cost</strong>
+                    <span><?= e(money((float) $depreciationSummary['total']['adjusted_cost'])) ?></span>
+                </div>
+                <div class="summary-card">
+                    <strong>Total depreciation</strong>
+                    <span><?= e(money((float) $depreciationSummary['total']['total_depreciation'])) ?></span>
+                </div>
+            </div>
+
+            <div class="print-table-wrap">
+                <table class="depreciation-report-table">
+                    <colgroup>
+                        <col style="width: 12%;">
+                        <col style="width: 4%;">
+                        <col style="width: 3%;">
+                        <col style="width: 4%;">
+                        <col style="width: 4%;">
+                        <col style="width: 5%;">
+                        <col style="width: 5%;">
+                        <col style="width: 4%;">
+                        <col style="width: 5%;">
+                        <col style="width: 4%;">
+                        <col style="width: 5%;">
+                        <col style="width: 5%;">
+                        <?php foreach ($depreciationSummary['months'] as $_monthName): ?>
+                            <col style="width: 2.2%;">
+                        <?php endforeach; ?>
+                        <col style="width: 5%;">
+                        <col style="width: 5%;">
+                        <col style="width: 5%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Particulars</th>
+                            <th rowspan="2">Acquired</th>
+                            <th>Est'd</th>
+                            <th>Date</th>
+                            <th>Remaining</th>
+                            <th rowspan="2">Ref.</th>
+                            <th rowspan="2">Cost</th>
+                            <th>Additions</th>
+                            <th>Cost</th>
+                            <th rowspan="2">Monthly<br>Dep'n</th>
+                            <th class="report-highlight-yellow">Book Value</th>
+                            <th class="report-highlight-yellow">Beginning</th>
+                            <th colspan="3">1st Quarter</th>
+                            <th colspan="3">2nd Quarter</th>
+                            <th colspan="3">3rd Quarter</th>
+                            <th colspan="3">4th Quarter</th>
+                            <th class="report-highlight-red">Total</th>
+                            <th class="report-highlight-green">Accum</th>
+                            <th class="report-highlight-peach">Book</th>
+                        </tr>
+                        <tr>
+                            <th>Useful<br>Life</th>
+                            <th>Disposed/<br>Others</th>
+                            <th>Useful Life/<br>In Mos.</th>
+                            <th>(Adjustments)</th>
+                            <th>(Adjusted)</th>
+                            <th class="report-highlight-yellow"><?= e($depreciationSummary['prior_book_value_label']) ?></th>
+                            <th class="report-highlight-yellow">Acc Dep'n</th>
+                            <?php foreach ($depreciationSummary['months'] as $monthName): ?>
+                                <th><?= e($monthName) ?></th>
+                            <?php endforeach; ?>
+                            <th class="report-highlight-red">Depreciation</th>
+                            <th class="report-highlight-green"><?= e($depreciationSummary['accumulated_label']) ?></th>
+                            <th class="report-highlight-peach"><?= e($depreciationSummary['book_value_label']) ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($depreciationSummary['groups'] as $group): ?>
+                            <tr class="report-category-row">
+                                <th colspan="27"><?= e($group['label']) ?></th>
+                            </tr>
+                            <?php foreach ($group['rows'] as $summaryRow): ?>
+                                <tr>
+                                    <td><?= e($summaryRow['particulars']) ?></td>
+                                    <td><?= e(format_date((string) $summaryRow['acquisition_date'], 'm.d.Y')) ?></td>
+                                    <td><?= e((string) $summaryRow['useful_life']) ?></td>
+                                    <td><?= e($summaryRow['date_disposed_others']) ?></td>
+                                    <td><?= e((string) $summaryRow['remaining_useful_months']) ?></td>
+                                    <td><?= e($summaryRow['ref']) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['cost'])) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['additions'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['adjusted_cost'])) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['monthly_depreciation'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['book_value_prior'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['beginning_accumulated_depreciation'], true)) ?></td>
+                                    <?php foreach (array_keys($depreciationSummary['months']) as $monthNumber): ?>
+                                        <td><?= e($formatReportAmount($summaryRow['months'][$monthNumber] ?? 0, true)) ?></td>
+                                    <?php endforeach; ?>
+                                    <td><?= e($formatReportAmount($summaryRow['total_depreciation'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['accumulated_depreciation'], true)) ?></td>
+                                    <td><?= e($formatReportAmount($summaryRow['book_value'], true)) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <tr class="report-total-row">
+                                <th>Total</th>
+                                <th colspan="5"><?= e((string) $group['total']['asset_count']) ?> asset<?= (int) $group['total']['asset_count'] === 1 ? '' : 's' ?></th>
+                                <th><?= e($formatReportAmount($group['total']['cost'])) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['additions'], true)) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['adjusted_cost'])) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['monthly_depreciation'], true)) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['book_value_prior'], true)) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['beginning_accumulated_depreciation'], true)) ?></th>
+                                <?php foreach (array_keys($depreciationSummary['months']) as $monthNumber): ?>
+                                    <th><?= e($formatReportAmount($group['total']['months'][$monthNumber] ?? 0, true)) ?></th>
+                                <?php endforeach; ?>
+                                <th><?= e($formatReportAmount($group['total']['total_depreciation'], true)) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['accumulated_depreciation'], true)) ?></th>
+                                <th><?= e($formatReportAmount($group['total']['book_value'], true)) ?></th>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr class="report-grand-total-row">
+                            <th>
+                                TOTAL<br>
+                                <span class="muted"><?= e((string) $depreciationSummary['total']['asset_count']) ?> asset<?= (int) $depreciationSummary['total']['asset_count'] === 1 ? '' : 's' ?></span>
+                            </th>
+                            <th colspan="5"></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['cost'])) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['additions'], true)) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['adjusted_cost'])) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['monthly_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['book_value_prior'], true)) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['beginning_accumulated_depreciation'], true)) ?></th>
+                            <?php foreach (array_keys($depreciationSummary['months']) as $monthNumber): ?>
+                                <th><?= e($formatReportAmount($depreciationSummary['total']['months'][$monthNumber] ?? 0, true)) ?></th>
+                            <?php endforeach; ?>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['total_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['accumulated_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($depreciationSummary['total']['book_value'], true)) ?></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         <?php elseif ($type === 'schedule' && $asset && $metrics): ?>
             <div class="summary">
                 <div class="summary-card">
@@ -403,26 +695,28 @@ switch ($type) {
                 <thead>
                     <tr>
                         <th>Year</th>
-                        <th>Cost</th>
-                        <th>Additional</th>
-                        <th>Beginning Value</th>
-                        <th>Depreciation Expense</th>
-                        <th>Accumulated Depreciation</th>
-                        <th>Ending Value</th>
-                        <th>Net Value</th>
+                        <th>Beginning Book</th>
+                        <th>Beginning Acc Dep'n</th>
+                        <?php foreach (depreciation_summary_months() as $monthName): ?>
+                            <th><?= e($monthName) ?></th>
+                        <?php endforeach; ?>
+                        <th>Total Depreciation</th>
+                        <th>Accum Dep'n</th>
+                        <th>Book Value</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($schedule as $row): ?>
                         <tr>
-                            <td><?= e((string) $row['depreciation_year']) ?></td>
-                            <td><?= e(money((float) $asset['acquisition_cost'])) ?></td>
-                            <td><?= e(money((float) ($asset['additional_amount'] ?? 0))) ?></td>
-                            <td><?= e(money((float) $row['beginning_value'])) ?></td>
-                            <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
-                            <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
-                            <td><?= e(money((float) $row['ending_value'])) ?></td>
-                            <td><?= e(money(schedule_display_net_value($asset, $row))) ?></td>
+                            <td><?= e((string) $row['year']) ?></td>
+                            <td><?= e($formatReportAmount($row['book_value_prior'], true)) ?></td>
+                            <td><?= e($formatReportAmount($row['beginning_accumulated_depreciation'], true)) ?></td>
+                            <?php foreach (array_keys(depreciation_summary_months()) as $monthNumber): ?>
+                                <td><?= e($formatReportAmount($row['months'][$monthNumber] ?? 0, true)) ?></td>
+                            <?php endforeach; ?>
+                            <td><?= e($formatReportAmount($row['total_depreciation'], true)) ?></td>
+                            <td><?= e($formatReportAmount($row['accumulated_depreciation'], true)) ?></td>
+                            <td><?= e($formatReportAmount($row['book_value'], true)) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

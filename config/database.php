@@ -27,6 +27,51 @@ function initialize_runtime_schema(PDO $pdo): void
                 FOREIGN KEY (transferred_by_user_id) REFERENCES users(user_id) ON DELETE SET NULL
         )'
     );
+
+    sync_asset_categories($pdo);
+}
+
+function sync_asset_categories(PDO $pdo): void
+{
+    if (!defined('ASSET_CATEGORY_NAMES')) {
+        return;
+    }
+
+    $insert = $pdo->prepare(
+        'INSERT INTO categories (category_name)
+         VALUES (:category_name)
+         ON DUPLICATE KEY UPDATE category_name = VALUES(category_name)'
+    );
+
+    foreach (ASSET_CATEGORY_NAMES as $categoryName) {
+        $insert->execute(['category_name' => $categoryName]);
+    }
+
+    if (!defined('ASSET_CATEGORY_ALIASES')) {
+        return;
+    }
+
+    $select = $pdo->prepare('SELECT category_id FROM categories WHERE category_name = :category_name LIMIT 1');
+    $updateAssets = $pdo->prepare('UPDATE assets SET category_id = :target_id WHERE category_id = :source_id');
+    $deleteCategory = $pdo->prepare('DELETE FROM categories WHERE category_id = :source_id');
+
+    foreach (ASSET_CATEGORY_ALIASES as $sourceName => $targetName) {
+        $select->execute(['category_name' => $sourceName]);
+        $sourceId = (int) ($select->fetchColumn() ?: 0);
+
+        $select->execute(['category_name' => $targetName]);
+        $targetId = (int) ($select->fetchColumn() ?: 0);
+
+        if ($sourceId <= 0 || $targetId <= 0 || $sourceId === $targetId) {
+            continue;
+        }
+
+        $updateAssets->execute([
+            'target_id' => $targetId,
+            'source_id' => $sourceId,
+        ]);
+        $deleteCategory->execute(['source_id' => $sourceId]);
+    }
 }
 
 $dbConfig = [

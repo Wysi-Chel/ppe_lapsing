@@ -573,6 +573,135 @@ html[data-theme="light"] .table thead th {
     white-space: normal;
 }
 
+.asset-lapsing-table {
+    min-width: 1500px;
+    font-size: 0.82rem;
+}
+
+.asset-lapsing-table thead th,
+.asset-lapsing-table tbody td {
+    padding: 0.64rem 0.7rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.asset-lapsing-table thead th {
+    color: var(--text-main);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.asset-lapsing-table tbody td:first-child {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
+.asset-register-table {
+    min-width: 1180px;
+}
+
+.asset-register-table tbody td {
+    vertical-align: top;
+}
+
+.asset-name-cell,
+.asset-meta-list,
+.asset-value-stack,
+.asset-action-stack {
+    display: grid;
+    gap: 6px;
+}
+
+.asset-name-cell {
+    min-width: 220px;
+}
+
+.asset-code-pill {
+    width: fit-content;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line-soft);
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+}
+
+.asset-value-stack {
+    min-width: 190px;
+}
+
+.asset-value-stack div {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.asset-value-stack span {
+    color: var(--text-soft);
+    font-size: 0.82rem;
+}
+
+.asset-value-stack strong {
+    font-weight: 600;
+    text-align: right;
+}
+
+.asset-actions-cell {
+    min-width: 180px;
+}
+
+.asset-action-stack {
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+}
+
+.asset-action-stack .btn,
+.asset-action-stack form,
+.asset-action-stack button {
+    width: 100%;
+}
+
+.depreciation-preview-table {
+    min-width: 1180px;
+    font-size: 0.84rem;
+}
+
+.depreciation-preview-table thead th,
+.depreciation-preview-table tbody td,
+.depreciation-preview-table tbody th {
+    padding: 0.72rem 0.8rem;
+    vertical-align: middle;
+}
+
+.depreciation-preview-table thead th {
+    color: var(--text-main);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.depreciation-preview-table tbody td:first-child,
+.depreciation-preview-table tbody th:first-child {
+    min-width: 220px;
+    text-align: left;
+    white-space: normal;
+}
+
+.depreciation-preview-table .report-category-row th {
+    background: rgba(125, 147, 172, 0.22);
+    color: var(--text-main);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.depreciation-preview-table .report-total-row th,
+.depreciation-preview-table .report-grand-total-row th {
+    background: rgba(200, 154, 99, 0.16);
+    color: var(--text-main);
+}
+
 .table tbody tr:hover {
     background: rgba(255, 255, 255, 0.035);
 }

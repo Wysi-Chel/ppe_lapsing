@@ -107,7 +107,7 @@ require_once APP_ROOT . '/includes/header.php';
                 <div class="mb-3">
                     <p class="eyebrow mb-2">Status follow-up</p>
                     <h2 class="section-title mb-1">Fully depreciated but active</h2>
-                    <p class="section-copy mb-0">These assets reached salvage value but are still tagged as active in the register.</p>
+                    <p class="section-copy mb-0">These assets have no remaining book value but are still tagged as active in the register.</p>
                 </div>
 
                 <?php if ($alerts['fully_depreciated_active'] === []): ?>

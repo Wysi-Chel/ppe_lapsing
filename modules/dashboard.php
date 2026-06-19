@@ -52,7 +52,7 @@ require_once APP_ROOT . '/includes/header.php';
         <section class="metric-card">
             <p class="metric-label mb-2">Fully Depreciated</p>
             <h2 class="metric-value mb-1"><?= e((string) $metrics['fully_depreciated_count']) ?></h2>
-            <p class="metric-meta mb-0">Items that have reached salvage value</p>
+            <p class="metric-meta mb-0">Items with no remaining book value</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Flagged Records</p>

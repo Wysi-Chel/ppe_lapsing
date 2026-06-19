@@ -25,7 +25,6 @@ switch ($type) {
                 number_format((float) $asset['acquisition_cost'], 2, '.', ''),
                 number_format((float) ($asset['additional_amount'] ?? 0), 2, '.', ''),
                 number_format(asset_total_cost($asset), 2, '.', ''),
-                number_format((float) $asset['salvage_value'], 2, '.', ''),
                 (string) $asset['useful_life'],
                 number_format((float) $asset['annual_depreciation'], 2, '.', ''),
                 number_format((float) $asset['accumulated_depreciation'], 2, '.', ''),
@@ -49,7 +48,6 @@ switch ($type) {
                 'Acquisition Cost',
                 'Additional Amount',
                 'Total Cost',
-                'Salvage Value',
                 'Useful Life',
                 'Annual Depreciation',
                 'Accumulated Depreciation',
@@ -137,6 +135,126 @@ switch ($type) {
             $rows
         );
 
+    case 'depreciation_summary':
+        $summaryYear = normalize_depreciation_summary_year(request_value('year', CURRENT_YEAR));
+        $selectedCategoryId = (int) request_value('category_id', 0);
+        $summaryFilters = $selectedCategoryId > 0 ? ['category_id' => $selectedCategoryId] : [];
+        $summary = build_depreciation_summary(fetch_assets($pdo, $summaryFilters), $summaryYear);
+        $rows = [];
+        $number = static fn (mixed $value): string => number_format((float) $value, 2, '.', '');
+
+        foreach ($summary['groups'] as $group) {
+            $rows[] = array_merge(['CATEGORY: ' . $group['label']], array_fill(0, 26, ''));
+
+            foreach ($group['rows'] as $summaryRow) {
+                $row = [
+                    $summaryRow['particulars'],
+                    format_date((string) $summaryRow['acquisition_date'], 'm.d.Y'),
+                    (string) $summaryRow['useful_life'],
+                    $summaryRow['date_disposed_others'],
+                    (string) $summaryRow['remaining_useful_months'],
+                    $summaryRow['ref'],
+                    $number($summaryRow['cost']),
+                    $number($summaryRow['additions']),
+                    $number($summaryRow['adjusted_cost']),
+                    $number($summaryRow['monthly_depreciation']),
+                    $number($summaryRow['book_value_prior']),
+                    $number($summaryRow['beginning_accumulated_depreciation']),
+                ];
+
+                foreach (array_keys($summary['months']) as $monthNumber) {
+                    $row[] = $number($summaryRow['months'][$monthNumber] ?? 0);
+                }
+
+                $row[] = $number($summaryRow['total_depreciation']);
+                $row[] = $number($summaryRow['accumulated_depreciation']);
+                $row[] = $number($summaryRow['book_value']);
+                $rows[] = $row;
+            }
+
+            $totalRow = [
+                'Total',
+                '',
+                '',
+                '',
+                '',
+                (string) $group['total']['asset_count'] . ' asset(s)',
+                $number($group['total']['cost']),
+                $number($group['total']['additions']),
+                $number($group['total']['adjusted_cost']),
+                $number($group['total']['monthly_depreciation']),
+                $number($group['total']['book_value_prior']),
+                $number($group['total']['beginning_accumulated_depreciation']),
+            ];
+
+            foreach (array_keys($summary['months']) as $monthNumber) {
+                $totalRow[] = $number($group['total']['months'][$monthNumber] ?? 0);
+            }
+
+            $totalRow[] = $number($group['total']['total_depreciation']);
+            $totalRow[] = $number($group['total']['accumulated_depreciation']);
+            $totalRow[] = $number($group['total']['book_value']);
+            $rows[] = $totalRow;
+        }
+
+        $grandTotal = [
+            $summary['total']['label'],
+            '',
+            '',
+            '',
+            '',
+            (string) $summary['total']['asset_count'] . ' asset(s)',
+            $number($summary['total']['cost']),
+            $number($summary['total']['additions']),
+            $number($summary['total']['adjusted_cost']),
+            $number($summary['total']['monthly_depreciation']),
+            $number($summary['total']['book_value_prior']),
+            $number($summary['total']['beginning_accumulated_depreciation']),
+        ];
+
+        foreach (array_keys($summary['months']) as $monthNumber) {
+            $grandTotal[] = $number($summary['total']['months'][$monthNumber] ?? 0);
+        }
+
+        $grandTotal[] = $number($summary['total']['total_depreciation']);
+        $grandTotal[] = $number($summary['total']['accumulated_depreciation']);
+        $grandTotal[] = $number($summary['total']['book_value']);
+        $rows[] = $grandTotal;
+
+        download_csv(
+            'ppe-depreciation-summary-' . $summaryYear . '-' . $timestamp . '.csv',
+            [
+                'Particulars',
+                'Acquired',
+                'Est\'d Useful Life',
+                'Date Disposed/Others',
+                'Remaining Useful Life/In Mos.',
+                'Ref.',
+                'Cost',
+                'Additions (Adjustments)',
+                'Cost (Adjusted)',
+                'Monthly Dep\'n',
+                'Book Value ' . $summary['prior_book_value_label'],
+                'Beginning Acc Dep\'n',
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+                'Total Depreciation',
+                'Accum ' . $summary['accumulated_label'],
+                'Book ' . $summary['book_value_label'],
+            ],
+            $rows
+        );
+
     case 'schedule':
         $assetId = (int) request_value('asset_id', 0);
         $asset = fetch_asset_by_id($pdo, $assetId);
@@ -146,22 +264,35 @@ switch ($type) {
             redirect('modules/exports.php');
         }
 
-        $schedule = fetch_depreciation_rows($pdo, $assetId);
+        $schedule = build_asset_yearly_lapsing_rows($asset);
         $rows = [];
+        $number = static fn (mixed $value): string => number_format((float) $value, 2, '.', '');
 
         foreach ($schedule as $row) {
-            $rows[] = [
+            $exportRow = [
                 $asset['asset_code'],
                 $asset['asset_name'],
-                (string) $row['depreciation_year'],
-                number_format((float) $asset['acquisition_cost'], 2, '.', ''),
-                number_format((float) ($asset['additional_amount'] ?? 0), 2, '.', ''),
-                number_format((float) $row['beginning_value'], 2, '.', ''),
-                number_format((float) $row['depreciation_expense'], 2, '.', ''),
-                number_format((float) $row['accumulated_depreciation'], 2, '.', ''),
-                number_format((float) $row['ending_value'], 2, '.', ''),
-                number_format(schedule_display_net_value($asset, $row), 2, '.', ''),
+                (string) $row['year'],
+                format_date((string) $row['acquisition_date'], 'm.d.Y'),
+                (string) $row['useful_life'],
+                (string) $row['remaining_useful_months'],
+                $row['ref'],
+                $number($row['cost']),
+                $number($row['additions']),
+                $number($row['adjusted_cost']),
+                $number($row['monthly_depreciation']),
+                $number($row['book_value_prior']),
+                $number($row['beginning_accumulated_depreciation']),
             ];
+
+            foreach (array_keys(depreciation_summary_months()) as $monthNumber) {
+                $exportRow[] = $number($row['months'][$monthNumber] ?? 0);
+            }
+
+            $exportRow[] = $number($row['total_depreciation']);
+            $exportRow[] = $number($row['accumulated_depreciation']);
+            $exportRow[] = $number($row['book_value']);
+            $rows[] = $exportRow;
         }
 
         download_csv(
@@ -170,13 +301,31 @@ switch ($type) {
                 'Asset Code',
                 'Asset Name',
                 'Year',
-                'Acquisition Cost',
-                'Additional Amount',
-                'Beginning Value',
-                'Depreciation Expense',
-                'Accumulated Depreciation',
-                'Ending Value',
-                'Net Value',
+                'Acquired',
+                'Useful Life',
+                'Remaining Useful Life/In Mos.',
+                'Ref.',
+                'Cost',
+                'Additions (Adjustments)',
+                'Cost (Adjusted)',
+                'Monthly Dep\'n',
+                'Beginning Book Value',
+                'Beginning Acc Dep\'n',
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December',
+                'Total Depreciation',
+                'Accum Dep\'n',
+                'Book Value',
             ],
             $rows
         );

@@ -5,51 +5,57 @@ require_once dirname(__DIR__) . '/config/app.php';
 require_login();
 
 $pdo = db();
-$assetLookup = fetch_asset_lookup($pdo);
-$selectedAssetId = (int) request_value('asset_id', $assetLookup[0]['asset_id'] ?? 0);
-$selectedAsset = $selectedAssetId > 0 ? fetch_asset_by_id($pdo, $selectedAssetId) : null;
+$summaryYear = normalize_depreciation_summary_year(request_value('year', CURRENT_YEAR));
+$categories = fetch_categories($pdo);
+$selectedCategoryId = (int) request_value('category_id', 0);
+$summaryReportParams = [
+    'type' => 'depreciation_summary',
+    'year' => $summaryYear,
+];
 
-if ($selectedAssetId > 0 && !$selectedAsset && $assetLookup !== []) {
-    $selectedAssetId = (int) $assetLookup[0]['asset_id'];
-    $selectedAsset = fetch_asset_by_id($pdo, $selectedAssetId);
+if ($selectedCategoryId > 0) {
+    $summaryReportParams['category_id'] = $selectedCategoryId;
 }
+
+$summaryReportQuery = http_build_query($summaryReportParams);
 
 $pageTitle = 'Exports';
 $pageHeading = 'Exports and Print Center';
-$pageDescription = 'Download clean CSV files or open print-friendly views for assets, alerts, transfers, and depreciation schedules.';
+$pageDescription = 'Download clean CSV files or open print-friendly views for assets, alerts, transfers, and depreciation reports.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
 <section class="shell-card mb-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <p class="eyebrow mb-2">Schedule selection</p>
-            <h2 class="section-title mb-1">Choose an asset for schedule output</h2>
-            <p class="section-copy mb-0">System-wide exports work immediately. Depreciation schedule export and print actions use the selected asset below.</p>
+            <p class="eyebrow mb-2">Report year</p>
+            <h2 class="section-title mb-1">Choose depreciation report year</h2>
+            <p class="section-copy mb-0">System-wide exports work immediately. The depreciation report uses the selected year below.</p>
         </div>
     </div>
 
-    <?php if ($assetLookup === []): ?>
-        <div class="empty-state">No assets are available yet, so schedule-specific export options are currently unavailable.</div>
-    <?php else: ?>
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-lg-9">
-                <label class="form-label" for="asset_id">Asset</label>
-                <select class="form-select" id="asset_id" name="asset_id">
-                    <?php foreach ($assetLookup as $assetOption): ?>
-                        <option value="<?= e((string) $assetOption['asset_id']) ?>" <?= selected_if($selectedAssetId, $assetOption['asset_id']) ?>>
-                            <?= e($assetOption['asset_code'] . ' - ' . $assetOption['asset_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-lg-3">
-                <button class="btn btn-primary w-100" type="submit">
-                    <i class="bi bi-search me-2"></i>Load Asset
-                </button>
-            </div>
-        </form>
-    <?php endif; ?>
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="year">Summary year</label>
+            <input class="form-control" id="year" name="year" type="number" min="1900" max="2200" step="1" value="<?= e((string) $summaryYear) ?>">
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <label class="form-label" for="category_id">Asset type</label>
+            <select class="form-select" id="category_id" name="category_id">
+                <option value="">All asset types</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= e((string) $category['category_id']) ?>" <?= $selectedCategoryId === (int) $category['category_id'] ? 'selected' : '' ?>>
+                        <?= e((string) $category['category_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <button class="btn btn-primary w-100" type="submit">
+                <i class="bi bi-funnel me-2"></i>Apply Filters
+            </button>
+        </div>
+    </form>
 </section>
 
 <div class="row g-4">
@@ -85,20 +91,10 @@ require_once APP_ROOT . '/includes/header.php';
                 </div>
                 <div class="list-row d-flex justify-content-between align-items-center gap-3">
                     <div>
-                        <strong>Selected schedule</strong>
-                        <p class="text-soft small mb-0">
-                            <?php if ($selectedAsset): ?>
-                                Export the depreciation schedule for <?= e($selectedAsset['asset_name']) ?>.
-                            <?php else: ?>
-                                Choose an asset above to enable schedule export.
-                            <?php endif; ?>
-                        </p>
+                        <strong>Depreciation summary</strong>
+                        <p class="text-soft small mb-0">Excel-style monthly lapsing report as of December 31, <?= e((string) $summaryYear) ?>.</p>
                     </div>
-                    <?php if ($selectedAsset): ?>
-                        <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $selectedAsset['asset_id'])) ?>">Download</a>
-                    <?php else: ?>
-                        <button class="btn btn-outline-light" type="button" disabled>Unavailable</button>
-                    <?php endif; ?>
+                    <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?' . $summaryReportQuery)) ?>">Download</a>
                 </div>
             </div>
         </section>
@@ -136,20 +132,10 @@ require_once APP_ROOT . '/includes/header.php';
                 </div>
                 <div class="list-row d-flex justify-content-between align-items-center gap-3">
                     <div>
-                        <strong>Selected schedule print view</strong>
-                        <p class="text-soft small mb-0">
-                            <?php if ($selectedAsset): ?>
-                                Open a printable schedule for <?= e($selectedAsset['asset_code']) ?>.
-                            <?php else: ?>
-                                Choose an asset above to enable schedule printing.
-                            <?php endif; ?>
-                        </p>
+                        <strong>Depreciation summary print view</strong>
+                        <p class="text-soft small mb-0">A printable monthly lapsing report for <?= e((string) $summaryYear) ?>.</p>
                     </div>
-                    <?php if ($selectedAsset): ?>
-                        <a class="btn btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $selectedAsset['asset_id'])) ?>" target="_blank" rel="noopener">Open</a>
-                    <?php else: ?>
-                        <button class="btn btn-outline-light" type="button" disabled>Unavailable</button>
-                    <?php endif; ?>
+                    <a class="btn btn-outline-light" href="<?= e(base_url('modules/print_view.php?' . $summaryReportQuery)) ?>" target="_blank" rel="noopener">Open</a>
                 </div>
             </div>
         </section>

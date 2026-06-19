@@ -57,6 +57,24 @@ date_default_timezone_set('Asia/Manila');
 define('APP_NAME', 'PPE Lapsing System');
 define('APP_ROOT', dirname(__DIR__));
 define('CURRENT_YEAR', (int) date('Y'));
+define('ASSET_CATEGORY_NAMES', [
+    'Building',
+    'Furnitures and Fixtures',
+    'Leasehold Improvements',
+    'Building Improvements',
+    'Land Improvements',
+    'Office Equipment',
+    'Transportation Equipment',
+    'Software',
+]);
+define('ASSET_CATEGORY_ALIASES', [
+    'Computer Equipment' => 'Office Equipment',
+    'Office Furniture' => 'Furnitures and Fixtures',
+    'Furniture and Fixtures' => 'Furnitures and Fixtures',
+    'Furniture & Fixtures' => 'Furnitures and Fixtures',
+    'Vehicle' => 'Transportation Equipment',
+    'Vehicles' => 'Transportation Equipment',
+]);
 
 $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? APP_ROOT;
 $resolvedDocumentRoot = is_string($documentRoot) ? (realpath($documentRoot) ?: APP_ROOT) : APP_ROOT;

@@ -5,118 +5,139 @@ require_once dirname(__DIR__) . '/config/app.php';
 require_login();
 
 $pdo = db();
-$assetLookup = fetch_asset_lookup($pdo);
-$selectedAssetId = (int) request_value('asset_id', $assetLookup[0]['asset_id'] ?? 0);
-$selectedAsset = $selectedAssetId > 0 ? fetch_asset_by_id($pdo, $selectedAssetId) : null;
-$schedule = $selectedAsset ? fetch_depreciation_rows($pdo, $selectedAssetId) : [];
-$metrics = $selectedAsset ? get_asset_metrics($selectedAsset) : null;
+$summaryYear = normalize_depreciation_summary_year(request_value('year', CURRENT_YEAR));
+$categories = fetch_categories($pdo);
+$selectedCategoryId = (int) request_value('category_id', 0);
+$summaryFilters = $selectedCategoryId > 0 ? ['category_id' => $selectedCategoryId] : [];
+$depreciationSummary = build_depreciation_summary(fetch_assets($pdo, $summaryFilters), $summaryYear);
+$summaryReportParams = [
+    'type' => 'depreciation_summary',
+    'year' => $summaryYear,
+];
+
+if ($selectedCategoryId > 0) {
+    $summaryReportParams['category_id'] = $selectedCategoryId;
+}
+
+$summaryReportQuery = http_build_query($summaryReportParams);
+$formatReportAmount = static function (float|int|string|null $value, bool $blankZero = false): string {
+    $amount = round((float) $value, 2);
+
+    if ($blankZero && abs($amount) < 0.005) {
+        return '';
+    }
+
+    return number_format($amount, 2);
+};
 
 $pageTitle = 'Depreciation';
-$pageHeading = 'Depreciation Schedule';
+$pageHeading = 'Depreciation Report Preview';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
-<?php if ($assetLookup === []): ?>
-    <section class="shell-card">
-        <div class="empty-state">
-            No assets are available yet. Add a PPE record first to generate a depreciation schedule.
+<section class="shell-card mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <p class="eyebrow mb-2">Report preview</p>
+            <h2 class="section-title mb-1">Lapsing schedule of property and equipment</h2>
+            <p class="section-copy mb-0"><?= e($depreciationSummary['period_label']) ?>. This preview keeps the key columns on screen; generate the detailed report for the complete monthly schedule.</p>
         </div>
-    </section>
-<?php else: ?>
-    <section class="shell-card mb-4">
-        <div class="mb-4">
-            <p class="eyebrow mb-2">Schedule lookup</p>
-            <h2 class="section-title mb-1">Choose an asset</h2>
+        <div class="stack-inline justify-content-end">
+            <a class="btn btn-primary" href="<?= e(base_url('modules/print_view.php?' . $summaryReportQuery)) ?>" target="_blank" rel="noopener">
+                <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generate Detailed Report
+            </a>
+            <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?' . $summaryReportQuery)) ?>">Download CSV</a>
         </div>
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-lg-8">
-                
-                <select class="form-select" id="asset_id" name="asset_id">
-                    <?php foreach ($assetLookup as $assetOption): ?>
-                        <option value="<?= e((string) $assetOption['asset_id']) ?>" <?= selected_if($selectedAssetId, $assetOption['asset_id']) ?>>
-                            <?= e($assetOption['asset_code'] . ' - ' . $assetOption['asset_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-lg-4 d-flex gap-2">
-                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-2"></i>Load Schedule</button>
-                <?php if ($selectedAsset): ?>
-                    <a class="btn btn-outline-light w-100" href="<?= e(base_url('modules/view_asset.php?asset_id=' . $selectedAssetId)) ?>">Asset Detail</a>
-                <?php endif; ?>
-            </div>
-        </form>
-    </section>
+    </div>
 
-    <?php if ($selectedAsset && $metrics): ?>
-        <div class="metric-grid mb-4">
-            <section class="metric-card">
-                <p class="metric-label mb-2">Acquisition Price</p>
-                <h2 class="metric-value mb-1"><?= e(money((float) $selectedAsset['acquisition_cost'])) ?></h2>
-                <p class="metric-meta mb-0">Initial recorded cost</p>
-            </section>
-            <section class="metric-card">
-                <p class="metric-label mb-2">Salvage Value</p>
-                <h2 class="metric-value mb-1"><?= e(money((float) $selectedAsset['salvage_value'])) ?></h2>
-                <p class="metric-meta mb-0">Expected residual value</p>
-            </section>
-            <section class="metric-card">
-                <p class="metric-label mb-2">Useful Life</p>
-                <h2 class="metric-value mb-1"><?= e((string) $selectedAsset['useful_life']) ?> years</h2>
-                <p class="metric-meta mb-0">Applied straight-line period</p>
-            </section>
-            <section class="metric-card">
-                <p class="metric-label mb-2">Depreciation Expense</p>
-                <h2 class="metric-value mb-1"><?= e(money($metrics['annual_depreciation'])) ?></h2>
-                <p class="metric-meta mb-0">Recognized each year</p>
-            </section>
-            <section class="metric-card">
-                <p class="metric-label mb-2">Net Book Value</p>
-                <h2 class="metric-value mb-1"><?= e(money($metrics['carrying_amount'])) ?></h2>
-                <p class="metric-meta mb-0">Cost less accumulated depreciation</p>
-            </section>
+    <form method="get" class="row g-3 align-items-end mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <label class="form-label" for="year">Summary year</label>
+            <input class="form-control" id="year" name="year" type="number" min="1900" max="2200" step="1" value="<?= e((string) $summaryYear) ?>">
         </div>
+        <div class="col-sm-6 col-lg-4">
+            <label class="form-label" for="category_id">Asset type</label>
+            <select class="form-select" id="category_id" name="category_id">
+                <option value="">All asset types</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= e((string) $category['category_id']) ?>" <?= $selectedCategoryId === (int) $category['category_id'] ? 'selected' : '' ?>>
+                        <?= e((string) $category['category_name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-funnel me-2"></i>Apply Filters</button>
+        </div>
+    </form>
 
-        <section class="shell-card">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <p class="eyebrow mb-2"><?= e($selectedAsset['asset_code']) ?></p>
-                    <h2 class="section-title mb-1"><?= e($selectedAsset['asset_name']) ?></h2>
-                    <p class="section-copy mb-0">Net value in this table already reflects the salvage deduction from the opening year.</p>
-                </div>
-                <div class="stack-inline justify-content-end">
-                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $selectedAssetId)) ?>">Export CSV</a>
-                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $selectedAssetId)) ?>" target="_blank" rel="noopener">Print</a>
-                    <span class="badge <?= e(status_badge_class((string) $selectedAsset['status'])) ?>"><?= e($selectedAsset['status']) ?></span>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table class="table align-middle lapsing-table">
-                    <thead>
-                        <tr>
-                            <th>Year</th>
-                            <th>Cost</th>
-                            <th>Additional</th>
-                            <th>Annual Depreciation</th>
-                            <th>Accumulated Depreciation</th>
-                            <th>Net Value</th>
+    <?php if ($depreciationSummary['groups'] === []): ?>
+        <div class="empty-state">No assets match the selected report filters.</div>
+    <?php else: ?>
+        <div class="table-wrap">
+            <table class="table align-middle depreciation-preview-table">
+                <thead>
+                    <tr>
+                        <th>Particulars</th>
+                        <th>Acquired</th>
+                        <th>Useful Life</th>
+                        <th>Remaining Mos.</th>
+                        <th>Ref.</th>
+                        <th>Adjusted Cost</th>
+                        <th>Monthly Dep'n</th>
+                        <th>Book <?= e($depreciationSummary['prior_book_value_label']) ?></th>
+                        <th>Total Depreciation</th>
+                        <th>Accum <?= e($depreciationSummary['accumulated_label']) ?></th>
+                        <th>Book <?= e($depreciationSummary['book_value_label']) ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($depreciationSummary['groups'] as $group): ?>
+                        <tr class="report-category-row">
+                            <th colspan="11"><?= e($group['label']) ?></th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($schedule as $row): ?>
+                        <?php foreach ($group['rows'] as $summaryRow): ?>
                             <tr>
-                                <td><?= e((string) $row['depreciation_year']) ?></td>
-                                <td><?= e(money((float) $selectedAsset['acquisition_cost'])) ?></td>
-                                <td><?= e(money((float) ($selectedAsset['additional_amount'] ?? 0))) ?></td>
-                                <td><?= e(money((float) $row['depreciation_expense'])) ?></td>
-                                <td><?= e(money((float) $row['accumulated_depreciation'])) ?></td>
-                                <td><?= e(money(schedule_display_net_value($selectedAsset, $row))) ?></td>
+                                <td class="text-start"><?= e($summaryRow['particulars']) ?></td>
+                                <td><?= e(format_date((string) $summaryRow['acquisition_date'], 'm.d.Y')) ?></td>
+                                <td><?= e((string) $summaryRow['useful_life']) ?></td>
+                                <td><?= e((string) $summaryRow['remaining_useful_months']) ?></td>
+                                <td><?= e($summaryRow['ref']) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['adjusted_cost'])) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['monthly_depreciation'], true)) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['book_value_prior'], true)) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['total_depreciation'], true)) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['accumulated_depreciation'], true)) ?></td>
+                                <td><?= e($formatReportAmount($summaryRow['book_value'], true)) ?></td>
                             </tr>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        <tr class="report-total-row">
+                            <th>Total</th>
+                            <th colspan="4"><?= e((string) $group['total']['asset_count']) ?> asset<?= (int) $group['total']['asset_count'] === 1 ? '' : 's' ?></th>
+                            <th><?= e($formatReportAmount($group['total']['adjusted_cost'])) ?></th>
+                            <th><?= e($formatReportAmount($group['total']['monthly_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($group['total']['book_value_prior'], true)) ?></th>
+                            <th><?= e($formatReportAmount($group['total']['total_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($group['total']['accumulated_depreciation'], true)) ?></th>
+                            <th><?= e($formatReportAmount($group['total']['book_value'], true)) ?></th>
+                        </tr>
+                    <?php endforeach; ?>
+                    <tr class="report-grand-total-row">
+                        <th>
+                            TOTAL
+                            <div class="text-soft small"><?= e((string) $depreciationSummary['total']['asset_count']) ?> asset<?= (int) $depreciationSummary['total']['asset_count'] === 1 ? '' : 's' ?></div>
+                        </th>
+                        <th colspan="4"></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['adjusted_cost'])) ?></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['monthly_depreciation'], true)) ?></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['book_value_prior'], true)) ?></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['total_depreciation'], true)) ?></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['accumulated_depreciation'], true)) ?></th>
+                        <th><?= e($formatReportAmount($depreciationSummary['total']['book_value'], true)) ?></th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
-<?php endif; ?>
+</section>
 <?php require_once APP_ROOT . '/includes/footer.php'; ?>

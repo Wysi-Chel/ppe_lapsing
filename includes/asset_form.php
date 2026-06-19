@@ -80,10 +80,6 @@ declare(strict_types=1);
                 <input class="form-control" id="additional_amount" name="additional_amount" type="number" step="0.01" min="0" inputmode="decimal" value="<?= e((string) ($form['additional_amount'] ?? '0')) ?>" placeholder="0.00">
             </div>
             <div class="col-md-4">
-                <label class="form-label" for="salvage_value">Salvage value</label>
-                <input class="form-control" id="salvage_value" name="salvage_value" type="number" step="0.01" min="0" inputmode="decimal" value="<?= e((string) ($form['salvage_value'] ?? '0')) ?>" placeholder="0.00">
-            </div>
-            <div class="col-md-4">
                 <label class="form-label" for="useful_life">Useful life (years)</label>
                 <input class="form-control" id="useful_life" name="useful_life" type="number" min="1" step="1" value="<?= e((string) ($form['useful_life'] ?? '')) ?>" placeholder="e.g. 5" required>
             </div>

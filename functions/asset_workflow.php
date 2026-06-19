@@ -203,7 +203,7 @@ function build_asset_alert_messages(array $asset): array
     }
 
     if (!empty($asset['is_fully_depreciated']) && ($asset['status'] ?? '') === 'Active') {
-        $messages[] = 'Asset has already reached its salvage value but is still marked as active.';
+        $messages[] = 'Asset has already been fully depreciated but is still marked as active.';
     }
 
     foreach (($asset['anomalies'] ?? []) as $anomaly) {
