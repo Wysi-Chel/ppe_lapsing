@@ -66,7 +66,13 @@ function fetch_departments(PDO $pdo): array
 
 function fetch_asset_lookup(PDO $pdo): array
 {
-    $statement = $pdo->query('SELECT asset_id, asset_code, asset_name FROM assets ORDER BY asset_name, asset_code');
+    $statement = $pdo->prepare(
+        'SELECT asset_id, asset_code, asset_name
+         FROM assets
+         WHERE organization_code = :organization_code
+         ORDER BY asset_name, asset_code'
+    );
+    $statement->execute(['organization_code' => current_organization_code()]);
 
     return $statement->fetchAll() ?: [];
 }
@@ -79,9 +85,13 @@ function fetch_asset_by_id(PDO $pdo, int $assetId): ?array
          LEFT JOIN categories c ON c.category_id = a.category_id
          LEFT JOIN departments d ON d.department_id = a.department_id
          WHERE a.asset_id = :asset_id
+           AND a.organization_code = :organization_code
          LIMIT 1'
     );
-    $statement->execute(['asset_id' => $assetId]);
+    $statement->execute([
+        'asset_id' => $assetId,
+        'organization_code' => current_organization_code(),
+    ]);
     $asset = $statement->fetch();
 
     return $asset ?: null;
@@ -93,8 +103,8 @@ function fetch_assets(PDO $pdo, array $filters = []): array
             FROM assets a
             LEFT JOIN categories c ON c.category_id = a.category_id
             LEFT JOIN departments d ON d.department_id = a.department_id
-            WHERE 1=1';
-    $params = [];
+            WHERE a.organization_code = :organization_code';
+    $params = ['organization_code' => current_organization_code()];
 
     if (!empty($filters['q'])) {
         $sql .= ' AND (
@@ -143,6 +153,7 @@ function normalize_asset_payload(array $input): array
     return [
         'asset_code' => trim((string) ($input['asset_code'] ?? '')),
         'asset_name' => trim((string) ($input['asset_name'] ?? '')),
+        'organization_code' => current_organization_code(),
         'category_id' => ($input['category_id'] ?? '') !== '' ? (int) $input['category_id'] : null,
         'department_id' => ($input['department_id'] ?? '') !== '' ? (int) $input['department_id'] : null,
         'acquisition_date' => trim((string) ($input['acquisition_date'] ?? '')),
@@ -196,17 +207,18 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
 {
     $query = $assetId === null
         ? 'INSERT INTO assets (
-                asset_code, asset_name, category_id, department_id, acquisition_date,
+                asset_code, asset_name, organization_code, category_id, department_id, acquisition_date,
                 acquisition_cost, additional_amount, salvage_value, useful_life, depreciation_method,
                 location, status, remarks
             ) VALUES (
-                :asset_code, :asset_name, :category_id, :department_id, :acquisition_date,
+                :asset_code, :asset_name, :organization_code, :category_id, :department_id, :acquisition_date,
                 :acquisition_cost, :additional_amount, :salvage_value, :useful_life, :depreciation_method,
                 :location, :status, :remarks
             )'
         : 'UPDATE assets SET
                 asset_code = :asset_code,
                 asset_name = :asset_name,
+                organization_code = :organization_code,
                 category_id = :category_id,
                 department_id = :department_id,
                 acquisition_date = :acquisition_date,
@@ -218,7 +230,8 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
                 location = :location,
                 status = :status,
                 remarks = :remarks
-            WHERE asset_id = :asset_id';
+            WHERE asset_id = :asset_id
+              AND organization_code = :organization_code';
 
     $params = $payload;
 
@@ -231,7 +244,7 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
         $statement->execute($params);
     } catch (PDOException $exception) {
         if ($exception->getCode() === '23000') {
-            throw new InvalidArgumentException('Asset code must be unique.');
+            throw new InvalidArgumentException('Asset code must be unique within the active company.');
         }
 
         throw $exception;
@@ -245,8 +258,15 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
 
 function delete_asset(PDO $pdo, int $assetId): void
 {
-    $statement = $pdo->prepare('DELETE FROM assets WHERE asset_id = :asset_id');
-    $statement->execute(['asset_id' => $assetId]);
+    $statement = $pdo->prepare(
+        'DELETE FROM assets
+         WHERE asset_id = :asset_id
+           AND organization_code = :organization_code'
+    );
+    $statement->execute([
+        'asset_id' => $assetId,
+        'organization_code' => current_organization_code(),
+    ]);
 }
 
 function calculate_annual_depreciation(float $cost, int $usefulLife): float

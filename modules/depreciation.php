@@ -40,13 +40,12 @@ require_once APP_ROOT . '/includes/header.php';
         <div>
             <p class="eyebrow mb-2">Report preview</p>
             <h2 class="section-title mb-1">Lapsing schedule of property and equipment</h2>
-            <p class="section-copy mb-0"><?= e($depreciationSummary['period_label']) ?>. This preview keeps the key columns on screen; generate the detailed report for the complete monthly schedule.</p>
         </div>
         <div class="stack-inline justify-content-end">
             <a class="btn btn-primary" href="<?= e(base_url('modules/print_view.php?' . $summaryReportQuery)) ?>" target="_blank" rel="noopener">
                 <i class="bi bi-file-earmark-spreadsheet me-2"></i>Generate Detailed Report
             </a>
-            <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?' . $summaryReportQuery)) ?>">Download CSV</a>
+            <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?' . $summaryReportQuery)) ?>">Download Excel</a>
         </div>
     </div>
 

@@ -30,7 +30,7 @@ require_once APP_ROOT . '/includes/header.php';
     </section>
 <?php else: ?>
     <div class="page-actions mb-4">
-        <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=alerts')) ?>">Export Alerts CSV</a>
+        <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=alerts')) ?>">Export Alerts Excel</a>
         <a class="btn btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=alerts')) ?>" target="_blank" rel="noopener">Print Alert Digest</a>
     </div>
 

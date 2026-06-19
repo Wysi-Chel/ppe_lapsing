@@ -28,7 +28,90 @@ function initialize_runtime_schema(PDO $pdo): void
         )'
     );
 
+    sync_asset_organizations($pdo);
     sync_asset_categories($pdo);
+}
+
+function sync_asset_organizations(PDO $pdo): void
+{
+    $defaultOrganization = defined('DEFAULT_ORGANIZATION_CODE')
+        ? (string) DEFAULT_ORGANIZATION_CODE
+        : 'ntrprising';
+
+    $columnCheck = $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = 'assets'
+           AND column_name = 'organization_code'"
+    );
+    $columnCheck->execute();
+
+    if ((int) $columnCheck->fetchColumn() === 0) {
+        $pdo->exec(
+            "ALTER TABLE assets
+             ADD COLUMN organization_code VARCHAR(32) NOT NULL DEFAULT '" . addslashes($defaultOrganization) . "' AFTER asset_name"
+        );
+    }
+
+    $pdo->prepare(
+        'UPDATE assets
+         SET organization_code = :organization_code
+         WHERE organization_code IS NULL OR TRIM(organization_code) = \'\''
+    )->execute(['organization_code' => $defaultOrganization]);
+
+    $indexCheck = $pdo->prepare(
+        "SELECT COUNT(*)
+         FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = 'assets'
+           AND index_name = 'idx_assets_organization'"
+    );
+    $indexCheck->execute();
+
+    if ((int) $indexCheck->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE assets ADD INDEX idx_assets_organization (organization_code)');
+    }
+
+    $uniqueStats = $pdo->query(
+        "SELECT index_name, column_name, seq_in_index, non_unique
+         FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = 'assets'
+         ORDER BY index_name, seq_in_index"
+    )->fetchAll() ?: [];
+
+    $groupedIndexes = [];
+    foreach ($uniqueStats as $stat) {
+        if ((int) ($stat['non_unique'] ?? 1) !== 0) {
+            continue;
+        }
+
+        $indexName = (string) ($stat['index_name'] ?? '');
+        if ($indexName === 'PRIMARY') {
+            continue;
+        }
+
+        $groupedIndexes[$indexName][] = (string) ($stat['column_name'] ?? '');
+    }
+
+    $hasCompositeUnique = false;
+    foreach ($groupedIndexes as $columns) {
+        if ($columns === ['organization_code', 'asset_code']) {
+            $hasCompositeUnique = true;
+            break;
+        }
+    }
+
+    if (!$hasCompositeUnique) {
+        $pdo->exec('ALTER TABLE assets ADD UNIQUE KEY uq_assets_organization_asset_code (organization_code, asset_code)');
+    }
+
+    foreach ($groupedIndexes as $indexName => $columns) {
+        if ($columns === ['asset_code']) {
+            $pdo->exec('ALTER TABLE assets DROP INDEX `' . str_replace('`', '``', $indexName) . '`');
+        }
+    }
 }
 
 function sync_asset_categories(PDO $pdo): void

@@ -48,15 +48,37 @@ function load_env_file(string $filePath): void
 
 load_env_file(dirname(__DIR__) . '/.env');
 
+define('APP_ROOT', dirname(__DIR__));
+
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
+    $sessionPath = APP_ROOT . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'sessions';
+
+    if (!is_dir($sessionPath)) {
+        @mkdir($sessionPath, 0777, true);
+    }
+
+    if (is_dir($sessionPath) && is_writable($sessionPath)) {
+        session_save_path($sessionPath);
+    }
+
     session_start();
 }
 
 date_default_timezone_set('Asia/Manila');
 
 define('APP_NAME', 'PPE Lapsing System');
-define('APP_ROOT', dirname(__DIR__));
 define('CURRENT_YEAR', (int) date('Y'));
+define('DEFAULT_ORGANIZATION_CODE', 'ntrprising');
+define('ORGANIZATION_OPTIONS', [
+    'micei' => [
+        'label' => 'MICEI',
+        'short_label' => 'MI',
+    ],
+    'ntrprising' => [
+        'label' => 'NTRPrising',
+        'short_label' => 'NT',
+    ],
+]);
 define('ASSET_CATEGORY_NAMES', [
     'Building',
     'Furnitures and Fixtures',
@@ -91,6 +113,7 @@ if ($normalizedDocumentRoot !== '' && str_starts_with($normalizedProjectRoot, $n
 define('BASE_URL', $baseUrl);
 
 require_once APP_ROOT . '/includes/helpers.php';
+handle_organization_switch_request();
 require_once APP_ROOT . '/config/database.php';
 require_once APP_ROOT . '/functions/depreciation_function.php';
 require_once APP_ROOT . '/functions/asset_workflow.php';

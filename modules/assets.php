@@ -39,17 +39,14 @@ require_once APP_ROOT . '/includes/header.php';
     <section class="metric-card">
         <p class="metric-label mb-2">Total PPE Cost</p>
         <h2 class="metric-value mb-1"><?= e(money($registerMetrics['total_cost'])) ?></h2>
-        <p class="metric-meta mb-0"><?= e((string) $registerMetrics['active_count']) ?> active asset<?= (int) $registerMetrics['active_count'] === 1 ? '' : 's' ?></p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">Net Book Value</p>
         <h2 class="metric-value mb-1"><?= e(money($registerMetrics['total_carrying'])) ?></h2>
-        <p class="metric-meta mb-0"><?= e(money($registerMetrics['total_accumulated'])) ?> accumulated</p>
     </section>
     <section class="metric-card">
         <p class="metric-label mb-2">Needs Review</p>
         <h2 class="metric-value mb-1"><?= e((string) $registerMetrics['unusual_count']) ?></h2>
-        <p class="metric-meta mb-0"><?= e((string) $registerMetrics['near_end_count']) ?> near end of life</p>
     </section>
 </div>
 
@@ -58,7 +55,6 @@ require_once APP_ROOT . '/includes/header.php';
         <div>
             <p class="eyebrow mb-2">Asset filters</p>
             <h2 class="section-title mb-1">Search the register</h2>
-            <p class="section-copy mb-0">Filter by keyword, asset type, department, or status.</p>
         </div>
         <div class="stack-inline">
             <span class="badge text-bg-dark"><?= e((string) $activeFilterCount) ?> active filter<?= $activeFilterCount === 1 ? '' : 's' ?></span>
@@ -121,7 +117,7 @@ require_once APP_ROOT . '/includes/header.php';
         </div>
         <div class="stack-inline justify-content-end">
             <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=assets')) ?>">
-                <i class="bi bi-download me-2"></i>Export CSV
+                <i class="bi bi-download me-2"></i>Export Excel
             </a>
             <a class="btn btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=assets')) ?>" target="_blank" rel="noopener">
                 <i class="bi bi-printer me-2"></i>Print

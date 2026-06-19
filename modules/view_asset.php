@@ -167,7 +167,7 @@ require_once APP_ROOT . '/includes/header.php';
                     <p class="section-copy mb-0">Each year follows the report format: beginning balances, monthly depreciation, total depreciation, accumulated depreciation, and book value.</p>
                 </div>
                 <div class="stack-inline">
-                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $assetId)) ?>">Export CSV</a>
+                    <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/export.php?type=schedule&asset_id=' . $assetId)) ?>">Export Excel</a>
                     <a class="btn btn-sm btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=schedule&asset_id=' . $assetId)) ?>" target="_blank" rel="noopener">Print</a>
                     <span class="badge text-bg-dark"><?= e((string) count($yearlyLapsingRows)) ?> rows</span>
                 </div>

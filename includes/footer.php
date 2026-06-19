@@ -2,9 +2,10 @@
 declare(strict_types=1);
 ?>
     <?php if (is_logged_in()): ?>
+                <?php $activeOrganization = current_organization(); ?>
                 </main>
                 <footer class="app-footer">
-                    <span><?= e(APP_NAME) ?></span>
+                    <span><?= e(APP_NAME . ' · ' . (string) ($activeOrganization['label'] ?? APP_NAME)) ?></span>
                 </footer>
             </div>
         </div>

@@ -7,6 +7,7 @@ require_login();
 $pdo = db();
 $type = trim((string) request_value('type', 'assets'));
 $printedAt = date('M d, Y h:i A');
+$activeOrganization = current_organization();
 $title = '';
 $assets = [];
 $alerts = [];
@@ -340,7 +341,7 @@ if ($asset) {
 
         <header>
             <h1><?= e($title) ?></h1>
-            <p><?= e(APP_NAME) ?></p>
+            <p><?= e(APP_NAME . ' · ' . (string) ($activeOrganization['label'] ?? APP_NAME)) ?></p>
             <p class="meta">Generated on <?= e($printedAt) ?></p>
         </header>
 

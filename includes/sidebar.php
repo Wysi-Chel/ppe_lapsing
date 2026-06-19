@@ -8,14 +8,29 @@ $navItems = [
     ['label' => 'Reports', 'href' => 'modules/reports.php', 'icon' => 'bi-bar-chart-line', 'match' => '/modules/reports.php'],
 ];
 
-if (can_manage_assets()) {
-    $navItems[] = ['label' => 'Transfers', 'href' => 'modules/transfers.php', 'icon' => 'bi-arrow-left-right', 'match' => '/modules/transfers.php'];
-}
 
-$navItems[] = ['label' => 'Exports', 'href' => 'modules/exports.php', 'icon' => 'bi-download', 'match' => ['/modules/exports.php', '/modules/export.php', '/modules/print_view.php']];
+$activeOrganization = current_organization();
+$activeOrganizationCode = current_organization_code();
+$organizationOptions = organization_options();
 ?>
 <aside class="sidebar">
-    
+    <div class="brand-block company-workspace-panel">
+        <div>
+            <div class="brand-title"><?= e((string) ($activeOrganization['label'] ?? APP_NAME)) ?></div>
+            <div class="text-soft small"><?= e((string) ($activeOrganization['tagline'] ?? APP_NAME)) ?></div>
+        </div>
+        <div class="organization-switch organization-switch-sidebar">
+            <?php foreach ($organizationOptions as $code => $organization): ?>
+                <a
+                    class="organization-option <?= $code === $activeOrganizationCode ? 'active' : '' ?>"
+                    href="<?= e(current_route(['organization_switch' => 1, 'organization_code' => $code])) ?>"
+                    aria-current="<?= $code === $activeOrganizationCode ? 'page' : 'false' ?>"
+                >
+                    <span class="organization-option-label"><?= e((string) ($organization['label'] ?? strtoupper($code))) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
 
     <div class="sidebar-section">
         <p class="nav-caption mb-0">Workspace</p>

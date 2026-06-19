@@ -107,7 +107,8 @@ function save_asset_transfer(PDO $pdo, int $assetId, array $payload, ?int $trans
     $updateAsset = $pdo->prepare(
         'UPDATE assets
          SET department_id = :department_id, location = :location
-         WHERE asset_id = :asset_id'
+         WHERE asset_id = :asset_id
+           AND organization_code = :organization_code'
     );
 
     $pdo->beginTransaction();
@@ -128,6 +129,7 @@ function save_asset_transfer(PDO $pdo, int $assetId, array $payload, ?int $trans
             'department_id' => $toDepartmentId,
             'location' => $toLocation === '' ? null : $toLocation,
             'asset_id' => $assetId,
+            'organization_code' => current_organization_code(),
         ]);
 
         $transferId = (int) $pdo->lastInsertId();
@@ -153,11 +155,12 @@ function fetch_asset_transfers(PDO $pdo, ?int $assetId = null, ?int $limit = nul
             INNER JOIN assets a ON a.asset_id = t.asset_id
             LEFT JOIN departments fd ON fd.department_id = t.from_department_id
             LEFT JOIN departments td ON td.department_id = t.to_department_id
-            LEFT JOIN users u ON u.user_id = t.transferred_by_user_id';
-    $params = [];
+            LEFT JOIN users u ON u.user_id = t.transferred_by_user_id
+            WHERE a.organization_code = :organization_code';
+    $params = ['organization_code' => current_organization_code()];
 
     if ($assetId !== null && $assetId > 0) {
-        $sql .= ' WHERE t.asset_id = :asset_id';
+        $sql .= ' AND t.asset_id = :asset_id';
         $params['asset_id'] = $assetId;
     }
 

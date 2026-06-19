@@ -35,8 +35,8 @@ switch ($type) {
             ];
         }
 
-        download_csv(
-            'ppe-assets-' . $timestamp . '.csv',
+        download_excel(
+            'ppe-assets-' . $timestamp . '.xlsx',
             [
                 'Asset Code',
                 'Asset Name',
@@ -56,7 +56,8 @@ switch ($type) {
                 'Location',
                 'Remarks',
             ],
-            $rows
+            $rows,
+            'Asset Register'
         );
 
     case 'alerts':
@@ -84,8 +85,8 @@ switch ($type) {
             ];
         }
 
-        download_csv(
-            'ppe-alerts-' . $timestamp . '.csv',
+        download_excel(
+            'ppe-alerts-' . $timestamp . '.xlsx',
             [
                 'Asset Code',
                 'Asset Name',
@@ -98,7 +99,8 @@ switch ($type) {
                 'Alert Types',
                 'Review Notes',
             ],
-            $rows
+            $rows,
+            'Alerts Queue'
         );
 
     case 'transfers':
@@ -119,8 +121,8 @@ switch ($type) {
             ];
         }
 
-        download_csv(
-            'ppe-transfers-' . $timestamp . '.csv',
+        download_excel(
+            'ppe-transfers-' . $timestamp . '.xlsx',
             [
                 'Transfer Date',
                 'Asset Code',
@@ -132,7 +134,8 @@ switch ($type) {
                 'Recorded By',
                 'Notes',
             ],
-            $rows
+            $rows,
+            'Transfer History'
         );
 
     case 'depreciation_summary':
@@ -221,8 +224,8 @@ switch ($type) {
         $grandTotal[] = $number($summary['total']['book_value']);
         $rows[] = $grandTotal;
 
-        download_csv(
-            'ppe-depreciation-summary-' . $summaryYear . '-' . $timestamp . '.csv',
+        download_excel(
+            'ppe-depreciation-summary-' . $summaryYear . '-' . $timestamp . '.xlsx',
             [
                 'Particulars',
                 'Acquired',
@@ -252,7 +255,8 @@ switch ($type) {
                 'Accum ' . $summary['accumulated_label'],
                 'Book ' . $summary['book_value_label'],
             ],
-            $rows
+            $rows,
+            'Depreciation Summary'
         );
 
     case 'schedule':
@@ -295,8 +299,8 @@ switch ($type) {
             $rows[] = $exportRow;
         }
 
-        download_csv(
-            'ppe-schedule-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $asset['asset_code']) . '-' . $timestamp . '.csv',
+        download_excel(
+            'ppe-schedule-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $asset['asset_code']) . '-' . $timestamp . '.xlsx',
             [
                 'Asset Code',
                 'Asset Name',
@@ -327,7 +331,8 @@ switch ($type) {
                 'Accum Dep\'n',
                 'Book Value',
             ],
-            $rows
+            $rows,
+            'Schedule ' . (string) $asset['asset_code']
         );
 
     default:

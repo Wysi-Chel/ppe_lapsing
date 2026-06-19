@@ -7,9 +7,11 @@ $pageDescription = $pageDescription ?? '';
 $documentTitle = $pageTitle === APP_NAME ? APP_NAME : $pageTitle . ' - ' . APP_NAME;
 $loggedInUser = current_user();
 $showShell = $loggedInUser !== null;
+$activeOrganization = current_organization();
+$activeOrganizationCode = current_organization_code();
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="en" data-organization="<?= e($activeOrganizationCode) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,9 +54,11 @@ $showShell = $loggedInUser !== null;
             <div class="main-stage">
                 <header class="topbar">
                     <div class="topbar-copy">
-                        <p class="eyebrow mb-2">PPE management system</p>
+                        <p class="eyebrow mb-2"><?= e($activeOrganization['label']) ?> workspace</p>
                         <h1 class="page-title mb-1"><?= e($pageHeading) ?></h1>
                         <p class="page-description mb-0"><?= e($pageDescription) ?></p>
+                        <div class="topbar-badges">
+                        </div>
                     </div>
                     <div class="topbar-meta">
                         <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode" title="Switch to light mode">

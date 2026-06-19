@@ -32,32 +32,26 @@ require_once APP_ROOT . '/includes/header.php';
         <section class="metric-card">
             <p class="metric-label mb-2">Total PPE Cost</p>
             <h2 class="metric-value mb-1"><?= e(money($metrics['total_cost'])) ?></h2>
-            <p class="metric-meta mb-0"><?= e((string) $metrics['asset_count']) ?> tracked assets</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Accumulated Depreciation</p>
             <h2 class="metric-value mb-1"><?= e(money($metrics['total_accumulated'])) ?></h2>
-            <p class="metric-meta mb-0">Recognized straight-line expense to date</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Net Value</p>
             <h2 class="metric-value mb-1"><?= e(money($metrics['total_carrying'])) ?></h2>
-            <p class="metric-meta mb-0">Current remaining book value</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Near End of Life</p>
             <h2 class="metric-value mb-1"><?= e((string) $metrics['near_end_count']) ?></h2>
-            <p class="metric-meta mb-0">Assets that may need replacement soon</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Fully Depreciated</p>
             <h2 class="metric-value mb-1"><?= e((string) $metrics['fully_depreciated_count']) ?></h2>
-            <p class="metric-meta mb-0">Items with no remaining book value</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Flagged Records</p>
             <h2 class="metric-value mb-1"><?= e((string) count($alerts['unusual'])) ?></h2>
-            <p class="metric-meta mb-0">Potential data quality issues to review</p>
         </section>
     </div>
 

@@ -21,7 +21,7 @@ $summaryReportQuery = http_build_query($summaryReportParams);
 
 $pageTitle = 'Exports';
 $pageHeading = 'Exports and Print Center';
-$pageDescription = 'Download clean CSV files or open print-friendly views for assets, alerts, transfers, and depreciation reports.';
+$pageDescription = 'Download clean Excel workbooks or open print-friendly views for assets, alerts, transfers, and depreciation reports.';
 
 require_once APP_ROOT . '/includes/header.php';
 ?>
@@ -63,8 +63,8 @@ require_once APP_ROOT . '/includes/header.php';
         <section class="shell-card h-100">
             <div class="mb-4">
                 <p class="eyebrow mb-2">Downloads</p>
-                <h2 class="section-title mb-1">CSV exports</h2>
-                <p class="section-copy mb-0">Use these files for audit support, reconciliations, or spreadsheet analysis.</p>
+                <h2 class="section-title mb-1">Excel exports</h2>
+                <p class="section-copy mb-0">Use these workbooks for audit support, reconciliations, or spreadsheet analysis.</p>
             </div>
 
             <div class="list-panel">

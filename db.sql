@@ -27,8 +27,9 @@ CREATE TABLE IF NOT EXISTS departments (
 
 CREATE TABLE IF NOT EXISTS assets (
     asset_id INT AUTO_INCREMENT PRIMARY KEY,
-    asset_code VARCHAR(50) NOT NULL UNIQUE,
+    asset_code VARCHAR(50) NOT NULL,
     asset_name VARCHAR(150) NOT NULL,
+    organization_code VARCHAR(32) NOT NULL DEFAULT 'ntrprising',
     category_id INT NULL,
     department_id INT NULL,
     acquisition_date DATE NOT NULL,
@@ -42,8 +43,10 @@ CREATE TABLE IF NOT EXISTS assets (
     remarks TEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_assets_status (status),
+    INDEX idx_assets_organization (organization_code),
     INDEX idx_assets_category (category_id),
     INDEX idx_assets_department (department_id),
+    UNIQUE KEY uq_assets_organization_asset_code (organization_code, asset_code),
     CONSTRAINT fk_assets_category
         FOREIGN KEY (category_id) REFERENCES categories(category_id),
     CONSTRAINT fk_assets_department
@@ -87,11 +90,14 @@ CREATE TABLE IF NOT EXISTS asset_transfers (
 
 INSERT INTO categories (category_name)
 VALUES
-    ('Computer Equipment'),
-    ('Office Furniture'),
-    ('Office Equipment'),
     ('Building'),
-    ('Vehicle')
+    ('Furnitures and Fixtures'),
+    ('Leasehold Improvements'),
+    ('Building Improvements'),
+    ('Land Improvements'),
+    ('Office Equipment'),
+    ('Transportation Equipment'),
+    ('Software')
 ON DUPLICATE KEY UPDATE
     category_name = VALUES(category_name);
 
@@ -119,6 +125,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO assets (
     asset_code,
     asset_name,
+    organization_code,
     category_id,
     department_id,
     acquisition_date,
@@ -135,7 +142,8 @@ VALUES
     (
         'PPE-2026-001',
         'Acer TravelMate Laptop',
-        (SELECT category_id FROM categories WHERE category_name = 'Computer Equipment' LIMIT 1),
+        'ntrprising',
+        (SELECT category_id FROM categories WHERE category_name = 'Office Equipment' LIMIT 1),
         1,
         '2024-06-15',
         45000.00,
@@ -150,6 +158,7 @@ VALUES
     (
         'PPE-2026-002',
         'Ricoh Multifunction Printer',
+        'ntrprising',
         (SELECT category_id FROM categories WHERE category_name = 'Office Equipment' LIMIT 1),
         2,
         '2023-08-20',
@@ -165,7 +174,8 @@ VALUES
     (
         'PPE-2026-003',
         'Executive Workstation Desk',
-        (SELECT category_id FROM categories WHERE category_name = 'Office Furniture' LIMIT 1),
+        'ntrprising',
+        (SELECT category_id FROM categories WHERE category_name = 'Furnitures and Fixtures' LIMIT 1),
         3,
         '2020-03-10',
         18000.00,
@@ -180,7 +190,8 @@ VALUES
     (
         'PPE-2026-004',
         'Toyota Service Van',
-        (SELECT category_id FROM categories WHERE category_name = 'Vehicle' LIMIT 1),
+        'ntrprising',
+        (SELECT category_id FROM categories WHERE category_name = 'Transportation Equipment' LIMIT 1),
         4,
         '2019-01-05',
         850000.00,
@@ -195,6 +206,7 @@ VALUES
     (
         'PPE-2026-005',
         'Biometric Attendance Terminal',
+        'ntrprising',
         (SELECT category_id FROM categories WHERE category_name = 'Office Equipment' LIMIT 1),
         5,
         '2021-11-12',
@@ -209,6 +221,7 @@ VALUES
     )
 ON DUPLICATE KEY UPDATE
     asset_name = VALUES(asset_name),
+    organization_code = VALUES(organization_code),
     category_id = VALUES(category_id),
     department_id = VALUES(department_id),
     acquisition_date = VALUES(acquisition_date),
