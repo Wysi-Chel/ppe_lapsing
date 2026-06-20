@@ -20,6 +20,10 @@ if ($selectedAssetId > 0 && !$selectedAsset && $assetLookup !== []) {
     $selectedAsset = fetch_asset_by_id($pdo, $selectedAssetId);
 }
 
+if ($selectedAsset) {
+    $selectedAsset = hydrate_asset_with_metrics($selectedAsset);
+}
+
 $errors = [];
 $form = normalize_transfer_payload([
     'asset_id' => $selectedAssetId,
@@ -34,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$selectedAsset) {
         $errors[] = 'The selected asset could not be found.';
     } else {
+        $selectedAsset = hydrate_asset_with_metrics($selectedAsset);
         $errors = validate_transfer_payload($form, $selectedAsset, $departments);
 
         if ($errors === []) {

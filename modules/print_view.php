@@ -62,9 +62,10 @@ switch ($type) {
             redirect('modules/exports.php');
         }
 
+        $asset = hydrate_asset_with_metrics($asset);
         $title = 'Depreciation Schedule - ' . $asset['asset_code'];
         $schedule = build_asset_yearly_lapsing_rows($asset);
-        $metrics = get_asset_metrics($asset);
+        $metrics = $asset;
         break;
 
     default:
@@ -191,22 +192,22 @@ if ($asset) {
         }
 
         .report-fullscreen {
-            background: #ffffff;
-            padding: 0;
+            background: #f4eee8;
+            padding: 16px;
             overflow-x: hidden;
         }
 
         .report-fullscreen .sheet {
-            width: 100vw;
-            min-height: 100vh;
+            width: 100%;
+            min-height: calc(100vh - 32px);
             max-width: none;
-            border: 0;
-            box-shadow: none;
-            padding: 10px;
+            border: 1px solid #d8d1ca;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+            padding: 16px;
         }
 
         .report-fullscreen .toolbar {
-            margin: 0 0 8px;
+            margin: 0 0 14px;
         }
 
         .report-fullscreen header {
@@ -214,33 +215,33 @@ if ($asset) {
             grid-template-columns: minmax(0, 1fr) auto;
             align-items: end;
             gap: 12px;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
         }
 
         .report-fullscreen h1 {
             margin: 0;
-            font-size: 16px;
+            font-size: 20px;
         }
 
         .report-fullscreen header p {
             margin: 0;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .report-fullscreen .meta {
-            margin: 0 0 6px;
-            font-size: 10px;
+            margin: 0 0 10px;
+            font-size: 12px;
         }
 
         .report-fullscreen .summary {
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
-            margin: 6px 0;
+            gap: 10px;
+            margin: 10px 0 14px;
         }
 
         .report-fullscreen .summary-card {
-            padding: 6px 8px;
-            font-size: 10px;
+            padding: 10px 12px;
+            font-size: 12px;
         }
 
         .print-table-wrap {
@@ -248,27 +249,39 @@ if ($asset) {
             overflow: visible;
         }
 
+        .report-fullscreen .print-table-wrap {
+            border: 1px solid #d8d1ca;
+            overflow-x: auto;
+            max-width: 100%;
+            background: #ffffff;
+        }
+
         .depreciation-report-table {
             width: 100%;
-            min-width: 0;
+            min-width: 2600px;
             table-layout: fixed;
-            font-size: clamp(5.2px, 0.48vw, 7px);
-            line-height: 1.12;
-            margin-top: 6px;
+            font-size: 11px;
+            line-height: 1.25;
+            margin-top: 0;
         }
 
         .depreciation-report-table th,
         .depreciation-report-table td {
-            padding: 2px 2px;
+            padding: 5px 6px;
             text-align: center;
-            white-space: normal;
-            overflow-wrap: anywhere;
+            white-space: nowrap;
+            overflow-wrap: normal;
             vertical-align: middle;
+        }
+
+        .depreciation-report-table th {
+            white-space: normal;
         }
 
         .depreciation-report-table td:first-child,
         .depreciation-report-table th:first-child {
             text-align: left;
+            white-space: normal;
         }
 
         .report-category-row th {
@@ -323,6 +336,61 @@ if ($asset) {
 
             .toolbar {
                 display: none;
+            }
+
+            .report-fullscreen {
+                padding: 0;
+                overflow: visible;
+            }
+
+            .report-fullscreen .sheet {
+                width: auto;
+                min-height: 0;
+                border: 0;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .report-fullscreen header {
+                margin-bottom: 6px;
+            }
+
+            .report-fullscreen h1 {
+                font-size: 16px;
+            }
+
+            .report-fullscreen header p,
+            .report-fullscreen .meta,
+            .report-fullscreen .summary-card {
+                font-size: 10px;
+            }
+
+            .report-fullscreen .summary {
+                gap: 6px;
+                margin: 6px 0;
+            }
+
+            .report-fullscreen .summary-card {
+                padding: 6px 8px;
+            }
+
+            .report-fullscreen .print-table-wrap {
+                border: 0;
+                overflow: visible;
+            }
+
+            .depreciation-report-table {
+                min-width: 0;
+                font-size: 6px;
+                line-height: 1.1;
+                margin-top: 6px;
+            }
+
+            .depreciation-report-table th,
+            .depreciation-report-table td {
+                padding: 2px;
+                white-space: normal;
+                overflow-wrap: anywhere;
             }
 
             a {
@@ -403,7 +471,7 @@ if ($asset) {
                     <span><?= e((string) count($alerts['near_end'])) ?></span>
                 </div>
                 <div class="summary-card">
-                    <strong>Fully Depreciated Active</strong>
+                    <strong>Fully Depreciated</strong>
                     <span><?= e((string) count($alerts['fully_depreciated_active'])) ?></span>
                 </div>
                 <div class="summary-card">
@@ -441,9 +509,9 @@ if ($asset) {
             </section>
 
             <section class="section">
-                <h2>Fully depreciated but active</h2>
+                <h2>Fully depreciated assets</h2>
                 <?php if ($alerts['fully_depreciated_active'] === []): ?>
-                    <p class="muted">No active assets are fully depreciated at this time.</p>
+                    <p class="muted">No assets are fully depreciated at this time.</p>
                 <?php else: ?>
                     <table>
                         <thead>

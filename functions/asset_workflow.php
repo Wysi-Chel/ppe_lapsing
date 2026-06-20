@@ -184,8 +184,8 @@ function build_asset_alert_labels(array $asset): array
         $labels[] = 'Near End of Life';
     }
 
-    if (!empty($asset['is_fully_depreciated']) && ($asset['status'] ?? '') === 'Active') {
-        $labels[] = 'Fully Depreciated but Active';
+    if (!empty($asset['is_fully_depreciated'])) {
+        $labels[] = 'Fully Depreciated';
     }
 
     if (!empty($asset['anomaly_count'])) {
@@ -205,8 +205,8 @@ function build_asset_alert_messages(array $asset): array
             : 'Only ' . (int) $asset['remaining_years'] . ' year(s) of useful life remain.';
     }
 
-    if (!empty($asset['is_fully_depreciated']) && ($asset['status'] ?? '') === 'Active') {
-        $messages[] = 'Asset has already been fully depreciated but is still marked as active.';
+    if (!empty($asset['is_fully_depreciated'])) {
+        $messages[] = 'No remaining book value based on the current schedule.';
     }
 
     foreach (($asset['anomalies'] ?? []) as $anomaly) {

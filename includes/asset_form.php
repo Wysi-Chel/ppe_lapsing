@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+$departmentCategoryIds = asset_department_category_ids($categories);
+$departmentFieldVisible = in_array((int) ($form['category_id'] ?? 0), $departmentCategoryIds, true);
 ?>
 <?php if ($errors !== []): ?>
     <div class="alert alert-danger">
@@ -22,18 +25,18 @@ declare(strict_types=1);
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="category_id">Category</label>
-                <select class="form-select" id="category_id" name="category_id">
+                <select class="form-select" id="category_id" name="category_id" data-asset-category-select>
                     <option value="">Select a category</option>
                     <?php foreach ($categories as $category): ?>
-                        <option value="<?= e((string) $category['category_id']) ?>" <?= selected_if($form['category_id'] ?? '', $category['category_id']) ?>>
+                        <option value="<?= e((string) $category['category_id']) ?>" data-allows-department="<?= asset_category_uses_department((string) $category['category_name']) ? '1' : '0' ?>" <?= selected_if($form['category_id'] ?? '', $category['category_id']) ?>>
                             <?= e($category['category_name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" data-department-field <?= $departmentFieldVisible ? '' : 'hidden' ?>>
                 <label class="form-label" for="department_id">Department</label>
-                <select class="form-select" id="department_id" name="department_id">
+                <select class="form-select" id="department_id" name="department_id" data-department-select <?= $departmentFieldVisible ? '' : 'disabled' ?>>
                     <option value="">Select a department</option>
                     <?php foreach ($departments as $department): ?>
                         <option value="<?= e((string) $department['department_id']) ?>" <?= selected_if($form['department_id'] ?? '', $department['department_id']) ?>>
@@ -45,14 +48,6 @@ declare(strict_types=1);
             <div class="col-md-6">
                 <label class="form-label" for="location">Location</label>
                 <input class="form-control" id="location" name="location" value="<?= e((string) ($form['location'] ?? '')) ?>" placeholder="">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="status">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="Active" <?= selected_if($form['status'] ?? 'Active', 'Active') ?>>Active</option>
-                    <option value="Disposed" <?= selected_if($form['status'] ?? '', 'Disposed') ?>>Disposed</option>
-                    <option value="Fully Depreciated" <?= selected_if($form['status'] ?? '', 'Fully Depreciated') ?>>Fully Depreciated</option>
-                </select>
             </div>
             <div class="col-12">
                 <label class="form-label" for="remarks">Remarks</label>

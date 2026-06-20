@@ -25,7 +25,7 @@ require_once APP_ROOT . '/includes/header.php';
     <section class="shell-card">
         <div class="empty-state">
             <h2 class="section-title mb-2">No alerts are available yet</h2>
-            <p class="mb-0">Add PPE assets first so the system can evaluate remaining life, status mismatches, and data quality checks.</p>
+            <p class="mb-0">Add PPE assets first so the system can evaluate remaining life, fully depreciated records, and data quality checks.</p>
         </div>
     </section>
 <?php else: ?>
@@ -46,9 +46,9 @@ require_once APP_ROOT . '/includes/header.php';
             <p class="metric-meta mb-0">Replacement planning candidates</p>
         </section>
         <section class="metric-card">
-            <p class="metric-label mb-2">Fully Depreciated Active</p>
+            <p class="metric-label mb-2">Fully Depreciated</p>
             <h2 class="metric-value mb-1"><?= e((string) count($alerts['fully_depreciated_active'])) ?></h2>
-            <p class="metric-meta mb-0">Status updates may be overdue</p>
+            <p class="metric-meta mb-0">No remaining book value</p>
         </section>
         <section class="metric-card">
             <p class="metric-label mb-2">Data Quality Flags</p>
@@ -105,13 +105,13 @@ require_once APP_ROOT . '/includes/header.php';
         <div class="col-xl-6">
             <section class="shell-card h-100">
                 <div class="mb-3">
-                    <p class="eyebrow mb-2">Status follow-up</p>
-                    <h2 class="section-title mb-1">Fully depreciated but active</h2>
-                    <p class="section-copy mb-0">These assets have no remaining book value but are still tagged as active in the register.</p>
+                    <p class="eyebrow mb-2">Depreciation status</p>
+                    <h2 class="section-title mb-1">Fully depreciated assets</h2>
+                    <p class="section-copy mb-0">These assets have no remaining book value based on the current schedule.</p>
                 </div>
 
                 <?php if ($alerts['fully_depreciated_active'] === []): ?>
-                    <div class="empty-state">No active assets are currently fully depreciated.</div>
+                    <div class="empty-state">No assets are currently fully depreciated.</div>
                 <?php else: ?>
                     <div class="table-wrap">
                         <table class="table align-middle">

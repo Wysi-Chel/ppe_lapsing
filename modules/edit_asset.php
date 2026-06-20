@@ -22,9 +22,11 @@ $categories = fetch_categories($pdo);
 $departments = fetch_departments($pdo);
 $errors = [];
 $form = normalize_asset_payload($asset);
+$form = normalize_asset_department_for_category($form, $categories);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form = normalize_asset_payload($_POST);
+    $form = normalize_asset_department_for_category($form, $categories);
     $errors = validate_asset_payload($form);
 
     if ($errors === []) {
@@ -52,7 +54,7 @@ require_once APP_ROOT . '/includes/header.php';
             <div class="mb-4">
                 <p class="eyebrow mb-2">Asset maintenance</p>
                 <h2 class="section-title mb-2"><?= e($asset['asset_name']) ?></h2>
-                <p class="section-subtitle">Keep the master record aligned with actual use, disposal status, and accounting assumptions.</p>
+                <p class="section-subtitle">Keep the master record aligned with actual use and accounting assumptions.</p>
             </div>
             <?php require APP_ROOT . '/includes/asset_form.php'; ?>
         </section>

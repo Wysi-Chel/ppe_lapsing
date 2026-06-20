@@ -13,7 +13,8 @@ if (!$asset) {
     redirect('modules/assets.php');
 }
 
-$metrics = get_asset_metrics($asset);
+$asset = hydrate_asset_with_metrics($asset);
+$metrics = $asset;
 $yearlyLapsingRows = build_asset_yearly_lapsing_rows($asset);
 $reportMonths = depreciation_summary_months();
 $formatReportAmount = static function (float|int|string|null $value, bool $blankZero = false): string {

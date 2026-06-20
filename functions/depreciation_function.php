@@ -64,6 +64,39 @@ function fetch_departments(PDO $pdo): array
     return $statement->fetchAll() ?: [];
 }
 
+function asset_category_uses_department(?string $categoryName): bool
+{
+    $normalized = strtolower(trim((string) $categoryName));
+
+    return $normalized !== ''
+        && (str_contains($normalized, 'furniture') || str_contains($normalized, 'office equipment'));
+}
+
+function asset_department_category_ids(array $categories): array
+{
+    $ids = [];
+
+    foreach ($categories as $category) {
+        if (asset_category_uses_department((string) ($category['category_name'] ?? ''))) {
+            $ids[] = (int) $category['category_id'];
+        }
+    }
+
+    return $ids;
+}
+
+function normalize_asset_department_for_category(array $payload, array $categories): array
+{
+    $departmentCategoryIds = asset_department_category_ids($categories);
+    $categoryId = (int) ($payload['category_id'] ?? 0);
+
+    if (!in_array($categoryId, $departmentCategoryIds, true)) {
+        $payload['department_id'] = null;
+    }
+
+    return $payload;
+}
+
 function fetch_asset_lookup(PDO $pdo): array
 {
     $statement = $pdo->prepare(
@@ -108,13 +141,18 @@ function fetch_assets(PDO $pdo, array $filters = []): array
 
     if (!empty($filters['q'])) {
         $sql .= ' AND (
-            a.asset_code LIKE :query
-            OR a.asset_name LIKE :query
-            OR COALESCE(a.location, \'\') LIKE :query
-            OR COALESCE(c.category_name, \'\') LIKE :query
-            OR COALESCE(d.department_name, \'\') LIKE :query
+            a.asset_code LIKE :query_asset_code
+            OR a.asset_name LIKE :query_asset_name
+            OR COALESCE(a.location, \'\') LIKE :query_location
+            OR COALESCE(c.category_name, \'\') LIKE :query_category
+            OR COALESCE(d.department_name, \'\') LIKE :query_department
         )';
-        $params['query'] = '%' . trim((string) $filters['q']) . '%';
+        $query = '%' . trim((string) $filters['q']) . '%';
+        $params['query_asset_code'] = $query;
+        $params['query_asset_name'] = $query;
+        $params['query_location'] = $query;
+        $params['query_category'] = $query;
+        $params['query_department'] = $query;
     }
 
     if (!empty($filters['status'])) {
@@ -148,9 +186,28 @@ function asset_total_cost(array $asset): float
     );
 }
 
+function asset_status_from_schedule(array $asset, ?int $year = null): string
+{
+    $evaluationYear = $year ?? CURRENT_YEAR;
+    $summary = calculate_depreciation_summary_asset($asset, $evaluationYear);
+    $usefulLife = (int) ($asset['useful_life'] ?? 0);
+    $adjustedCost = asset_total_cost($asset);
+
+    if ($usefulLife > 0 && $adjustedCost > 0) {
+        $fullyDepreciated = (float) ($summary['book_value'] ?? $adjustedCost) <= 0.01
+            || (int) ($summary['remaining_useful_months'] ?? 1) <= 0;
+
+        if ($fullyDepreciated) {
+            return 'Fully Depreciated';
+        }
+    }
+
+    return 'Active';
+}
+
 function normalize_asset_payload(array $input): array
 {
-    return [
+    $payload = [
         'asset_code' => trim((string) ($input['asset_code'] ?? '')),
         'asset_name' => trim((string) ($input['asset_name'] ?? '')),
         'organization_code' => current_organization_code(),
@@ -163,9 +220,12 @@ function normalize_asset_payload(array $input): array
         'useful_life' => (int) ($input['useful_life'] ?? 0),
         'depreciation_method' => trim((string) ($input['depreciation_method'] ?? 'Straight-line')) ?: 'Straight-line',
         'location' => trim((string) ($input['location'] ?? '')),
-        'status' => trim((string) ($input['status'] ?? 'Active')) ?: 'Active',
         'remarks' => trim((string) ($input['remarks'] ?? '')),
     ];
+
+    $payload['status'] = asset_status_from_schedule($payload);
+
+    return $payload;
 }
 
 function validate_asset_payload(array $payload): array
@@ -196,15 +256,13 @@ function validate_asset_payload(array $payload): array
         $errors[] = 'Useful life must be at least 1 year.';
     }
 
-    if (!in_array($payload['status'], ['Active', 'Disposed', 'Fully Depreciated'], true)) {
-        $errors[] = 'Please select a valid status.';
-    }
-
     return $errors;
 }
 
 function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
 {
+    $payload['status'] = asset_status_from_schedule($payload);
+
     $query = $assetId === null
         ? 'INSERT INTO assets (
                 asset_code, asset_name, organization_code, category_id, department_id, acquisition_date,
@@ -231,12 +289,13 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
                 status = :status,
                 remarks = :remarks
             WHERE asset_id = :asset_id
-              AND organization_code = :organization_code';
+              AND organization_code = :where_organization_code';
 
     $params = $payload;
 
     if ($assetId !== null) {
         $params['asset_id'] = $assetId;
+        $params['where_organization_code'] = $payload['organization_code'];
     }
 
     try {
@@ -739,7 +798,10 @@ function get_asset_metrics(array $asset, ?int $year = null): array
         $condition = 'Monitor';
     }
 
+    $status = $isFullyDepreciated ? 'Fully Depreciated' : 'Active';
+
     $metrics = [
+        'status' => $status,
         'annual_depreciation' => $annualDepreciation,
         'accumulated_depreciation' => round((float) $accumulated, 2),
         'carrying_amount' => round((float) $carryingAmount, 2),
@@ -763,7 +825,6 @@ function detect_asset_anomalies(array $asset, array $metrics): array
 {
     $anomalies = [];
     $cost = asset_total_cost($asset);
-    $status = (string) ($asset['status'] ?? 'Active');
 
     if ((int) ($asset['useful_life'] ?? 0) <= 0) {
         $anomalies[] = 'Useful life is missing or invalid.';
@@ -773,10 +834,6 @@ function detect_asset_anomalies(array $asset, array $metrics): array
         $anomalies[] = 'Net amount dropped below zero.';
     }
 
-    if ($metrics['is_fully_depreciated'] && $status === 'Active') {
-        $anomalies[] = 'Asset is fully depreciated but still marked as active.';
-    }
-
     if ($cost <= 0) {
         $anomalies[] = 'Acquisition cost should be greater than zero.';
     }
@@ -784,11 +841,17 @@ function detect_asset_anomalies(array $asset, array $metrics): array
     return $anomalies;
 }
 
+function hydrate_asset_with_metrics(array $asset, ?int $year = null): array
+{
+    $metrics = get_asset_metrics($asset, $year);
+
+    return array_merge($asset, $metrics);
+}
+
 function hydrate_assets_with_metrics(array $assets, ?int $year = null): array
 {
     foreach ($assets as &$asset) {
-        $metrics = get_asset_metrics($asset, $year);
-        $asset = array_merge($asset, $metrics);
+        $asset = hydrate_asset_with_metrics($asset, $year);
     }
     unset($asset);
 
@@ -892,7 +955,7 @@ function build_asset_alerts(array $assets): array
             $alerts['near_end'][] = $asset;
         }
 
-        if (!empty($asset['is_fully_depreciated']) && ($asset['status'] ?? '') === 'Active') {
+        if (!empty($asset['is_fully_depreciated'])) {
             $alerts['fully_depreciated_active'][] = $asset;
         }
 

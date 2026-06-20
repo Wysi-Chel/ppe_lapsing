@@ -8,6 +8,27 @@ document.querySelectorAll('[data-confirm-delete]').forEach((button) => {
     });
 });
 
+const assetCategorySelect = document.querySelector('[data-asset-category-select]');
+const departmentField = document.querySelector('[data-department-field]');
+const departmentSelect = document.querySelector('[data-department-select]');
+
+if (assetCategorySelect && departmentField && departmentSelect) {
+    const updateDepartmentField = () => {
+        const selectedOption = assetCategorySelect.options[assetCategorySelect.selectedIndex];
+        const shouldShow = selectedOption?.dataset.allowsDepartment === '1';
+
+        departmentField.hidden = !shouldShow;
+        departmentSelect.disabled = !shouldShow;
+
+        if (!shouldShow) {
+            departmentSelect.value = '';
+        }
+    };
+
+    assetCategorySelect.addEventListener('change', updateDepartmentField);
+    updateDepartmentField();
+}
+
 const themeToggleButtons = document.querySelectorAll('[data-theme-toggle]');
 
 const getActiveTheme = () => document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';

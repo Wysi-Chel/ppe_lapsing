@@ -14,13 +14,14 @@ $categories = fetch_categories($pdo);
 $departments = fetch_departments($pdo);
 $errors = [];
 $form = normalize_asset_payload([
-    'status' => 'Active',
     'depreciation_method' => 'Straight-line',
     'additional_amount' => 0,
 ]);
+$form = normalize_asset_department_for_category($form, $categories);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form = normalize_asset_payload($_POST);
+    $form = normalize_asset_department_for_category($form, $categories);
     $errors = validate_asset_payload($form);
 
     if ($errors === []) {

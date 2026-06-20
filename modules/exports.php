@@ -78,7 +78,7 @@ require_once APP_ROOT . '/includes/header.php';
                 <div class="list-row d-flex justify-content-between align-items-center gap-3">
                     <div>
                         <strong>Alerts queue</strong>
-                        <p class="text-soft small mb-0">Near-end, status mismatch, and data-quality issues in one export.</p>
+                        <p class="text-soft small mb-0">Near-end, fully depreciated, and data-quality issues in one export.</p>
                     </div>
                     <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=alerts')) ?>">Download</a>
                 </div>

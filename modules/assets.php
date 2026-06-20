@@ -21,7 +21,17 @@ $filters = [
 
 $categories = fetch_categories($pdo);
 $departments = fetch_departments($pdo);
-$assets = hydrate_assets_with_metrics(fetch_assets($pdo, $filters));
+$assetQueryFilters = $filters;
+unset($assetQueryFilters['status']);
+$assets = hydrate_assets_with_metrics(fetch_assets($pdo, $assetQueryFilters));
+
+if ($filters['status'] !== '') {
+    $assets = array_values(array_filter(
+        $assets,
+        static fn (array $asset): bool => (string) ($asset['status'] ?? '') === $filters['status']
+    ));
+}
+
 $registerMetrics = build_dashboard_metrics($assets);
 $activeFilterCount = count(array_filter($filters, static fn (string $value): bool => $value !== ''));
 
@@ -76,7 +86,6 @@ require_once APP_ROOT . '/includes/header.php';
             <select class="form-select" id="status" name="status">
                 <option value="">All statuses</option>
                 <option value="Active" <?= selected_if($filters['status'], 'Active') ?>>Active</option>
-                <option value="Disposed" <?= selected_if($filters['status'], 'Disposed') ?>>Disposed</option>
                 <option value="Fully Depreciated" <?= selected_if($filters['status'], 'Fully Depreciated') ?>>Fully Depreciated</option>
             </select>
         </div>
@@ -116,12 +125,6 @@ require_once APP_ROOT . '/includes/header.php';
             <h2 class="section-title mb-1"><?= e((string) count($assets)) ?> <?= e(pluralize(count($assets), 'record')) ?> found</h2>
         </div>
         <div class="stack-inline justify-content-end">
-            <a class="btn btn-outline-light" href="<?= e(base_url('modules/export.php?type=assets')) ?>">
-                <i class="bi bi-download me-2"></i>Export Excel
-            </a>
-            <a class="btn btn-outline-light" href="<?= e(base_url('modules/print_view.php?type=assets')) ?>" target="_blank" rel="noopener">
-                <i class="bi bi-printer me-2"></i>Print
-            </a>
         </div>
     </div>
 
