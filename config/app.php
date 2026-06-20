@@ -67,6 +67,7 @@ if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
 date_default_timezone_set('Asia/Manila');
 
 define('APP_NAME', 'PPE Lapsing System');
+define('APP_ACCESS_PASSWORD', getenv('APP_ACCESS_PASSWORD') ?: '@Micei2026');
 define('CURRENT_YEAR', (int) date('Y'));
 define('DEFAULT_ORGANIZATION_CODE', 'ntrprising');
 define('ORGANIZATION_OPTIONS', [

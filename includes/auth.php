@@ -13,40 +13,12 @@ function normalize_auth_user(array $user): array
 
 function default_user(): array
 {
-    static $user = null;
-
-    if (is_array($user)) {
-        return $user;
-    }
-
-    $user = [
+    return [
         'user_id' => null,
-        'full_name' => 'Local Operator',
-        'email' => 'local@ppe.local',
+        'full_name' => 'MICEI Operator',
+        'email' => 'operator@ppe.local',
         'role' => 'Admin',
     ];
-
-    if (db_error() !== null) {
-        return $user;
-    }
-
-    try {
-        $statement = db()->query(
-            "SELECT user_id, full_name, email, role
-             FROM users
-             ORDER BY (role = 'Admin') DESC, created_at ASC
-             LIMIT 1"
-        );
-        $databaseUser = $statement->fetch();
-
-        if ($databaseUser) {
-            $user = normalize_auth_user($databaseUser);
-        }
-    } catch (Throwable) {
-        // Direct access should continue even when the users lookup is unavailable.
-    }
-
-    return $user;
 }
 
 function current_user(): ?array
@@ -55,7 +27,7 @@ function current_user(): ?array
         return normalize_auth_user($_SESSION['auth_user']);
     }
 
-    return default_user();
+    return null;
 }
 
 function is_logged_in(): bool
@@ -65,12 +37,31 @@ function is_logged_in(): bool
 
 function login_user(array $user): void
 {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
+
     $_SESSION['auth_user'] = normalize_auth_user($user);
+}
+
+function login_with_access_password(string $password): bool
+{
+    if (!hash_equals((string) APP_ACCESS_PASSWORD, $password)) {
+        return false;
+    }
+
+    login_user(default_user());
+
+    return true;
 }
 
 function logout_user(): void
 {
     unset($_SESSION['auth_user']);
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
 }
 
 function user_has_role(array|string $roles): bool

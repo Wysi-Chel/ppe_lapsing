@@ -56,6 +56,10 @@ $organizationOptions = organization_options();
     <?php endif; ?>
 
     <div class="sidebar-footer">
+        <a class="sidebar-link" href="<?= e(base_url('auth/logout.php')) ?>">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+        </a>
         <div class="sidebar-note">
             <span>Today</span>
             <strong><?= e(date('M d, Y')) ?></strong>

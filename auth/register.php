@@ -3,15 +3,13 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/config/app.php';
 
+require_admin();
+
 $databaseError = db_error();
 $pdo = $databaseError === null ? db() : null;
 $userCount = $pdo instanceof PDO ? count_users($pdo) : 0;
 $bootstrapSetup = $userCount === 0;
 $existingUsers = $pdo instanceof PDO ? fetch_users($pdo) : [];
-
-if (!$bootstrapSetup) {
-    require_admin();
-}
 
 $createErrors = [];
 $passwordErrors = [];
