@@ -71,5 +71,7 @@ $activeOrganizationCode = current_organization_code();
                     <?php render_flash_messages(); ?>
     <?php else: ?>
         <main class="auth-stage">
-            <?php render_flash_messages(); ?>
+            <div class="auth-flash-stack">
+                <?php render_flash_messages(); ?>
+            </div>
     <?php endif; ?>

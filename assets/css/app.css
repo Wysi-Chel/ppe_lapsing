@@ -1020,11 +1020,33 @@ html[data-theme="light"] .btn-outline-light:active {
     z-index: 1;
 }
 
+.auth-flash-stack {
+    position: fixed;
+    top: 76px;
+    left: 50%;
+    z-index: 60;
+    width: min(520px, calc(100vw - 32px));
+    transform: translateX(-50%);
+    display: grid;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.auth-flash-stack .alert {
+    margin: 0;
+    pointer-events: auto;
+    text-align: center;
+}
+
 .auth-grid {
     width: min(1140px, 100%);
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
     gap: 22px;
+}
+
+.auth-stage > .auth-card {
+    width: min(548px, 100%);
 }
 
 .hero-panel,
@@ -1207,6 +1229,16 @@ html[data-theme="light"] .alert {
 }
 
 @media (max-width: 767.98px) {
+    .auth-stage {
+        align-items: center;
+        padding: 88px 18px 24px;
+    }
+
+    .auth-flash-stack {
+        top: 68px;
+        width: calc(100vw - 28px);
+    }
+
     .main-stage {
         padding: 20px;
     }
