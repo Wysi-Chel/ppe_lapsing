@@ -511,6 +511,9 @@ function calculate_depreciation_summary_asset(array $asset, int $year): array
         $roundedMonthlyValues[$monthNumber] = round((float) $value, 2);
     }
 
+    $usefulLifeMonths = $usefulLife * 12;
+    $remainingUsefulMonths = max($usefulLifeMonths - $accumulatedMonths, 0);
+
     return [
         'asset_id' => (int) ($asset['asset_id'] ?? 0),
         'asset_code' => (string) ($asset['asset_code'] ?? ''),
@@ -520,7 +523,8 @@ function calculate_depreciation_summary_asset(array $asset, int $year): array
         'acquisition_date' => (string) ($asset['acquisition_date'] ?? ''),
         'useful_life' => $usefulLife,
         'date_disposed_others' => (($asset['status'] ?? '') !== 'Active') ? (string) ($asset['status'] ?? '') : '',
-        'remaining_useful_months' => max(($usefulLife * 12) - $accumulatedMonths, 0),
+        'useful_life_months' => $usefulLifeMonths,
+        'remaining_useful_months' => $remainingUsefulMonths,
         'ref' => (string) ($asset['asset_code'] ?? ''),
         'cost' => round($cost, 2),
         'additions' => round($additions, 2),
@@ -805,6 +809,7 @@ function get_asset_metrics(array $asset, ?int $year = null): array
         'annual_depreciation' => $annualDepreciation,
         'accumulated_depreciation' => round((float) $accumulated, 2),
         'carrying_amount' => round((float) $carryingAmount, 2),
+        'remaining_months' => $remainingMonths,
         'remaining_years' => $remainingYears,
         'elapsed_years' => $elapsedYears,
         'life_used_ratio' => round($lifeUsedRatio, 4),

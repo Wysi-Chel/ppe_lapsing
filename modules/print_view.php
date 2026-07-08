@@ -659,9 +659,9 @@ if ($asset) {
                             <th class="report-highlight-peach">Book</th>
                         </tr>
                         <tr>
-                            <th>Useful<br>Life</th>
+                            <th>Useful Life<br>(Years)</th>
                             <th>Disposed/<br>Others</th>
-                            <th>Useful Life/<br>In Mos.</th>
+                            <th>Remaining<br>Months</th>
                             <th>(Adjustments)</th>
                             <th>(Adjusted)</th>
                             <th class="report-highlight-yellow"><?= e($depreciationSummary['prior_book_value_label']) ?></th>

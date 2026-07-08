@@ -176,9 +176,10 @@ require_once APP_ROOT . '/includes/header.php';
                                 </div>
                             </td>
                             <td>
+                                <?php $remainingMonths = (int) ($asset['remaining_months'] ?? 0); ?>
                                 <div class="asset-meta-list">
                                     <strong><?= e((string) $asset['useful_life']) ?> year<?= (int) $asset['useful_life'] === 1 ? '' : 's' ?></strong>
-                                    <span class="text-soft small"><?= e((string) $asset['remaining_years']) ?> year<?= (int) $asset['remaining_years'] === 1 ? '' : 's' ?> remaining</span>
+                                    <span class="text-soft small"><?= e((string) $remainingMonths) ?> month<?= $remainingMonths === 1 ? '' : 's' ?> remaining</span>
                                 </div>
                             </td>
                             <td>

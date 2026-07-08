@@ -79,8 +79,8 @@ require_once APP_ROOT . '/includes/header.php';
                     <tr>
                         <th>Particulars</th>
                         <th>Acquired</th>
-                        <th>Useful Life</th>
-                        <th>Remaining Mos.</th>
+                        <th>Useful Life (Years)</th>
+                        <th>Remaining Months</th>
                         <th>Ref.</th>
                         <th>Adjusted Cost</th>
                         <th>Monthly Dep'n</th>
