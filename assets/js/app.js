@@ -41,6 +41,7 @@ const updateThemeToggleButtons = (theme) => {
         const icon = button.querySelector('[data-theme-toggle-icon]');
         const label = button.querySelector('[data-theme-toggle-label]');
 
+        button.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
         button.setAttribute('title', 'Switch to ' + nextThemeLabel.toLowerCase());
         button.setAttribute('aria-label', 'Switch to ' + nextThemeLabel.toLowerCase());
 
@@ -73,4 +74,32 @@ themeToggleButtons.forEach((button) => {
         const nextTheme = getActiveTheme() === 'dark' ? 'light' : 'dark';
         applyTheme(nextTheme);
     });
+});
+
+const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+const sidebarCloseButtons = document.querySelectorAll('[data-sidebar-close]');
+
+const setSidebarOpen = (isOpen) => {
+    document.body.classList.toggle('sidebar-open', isOpen);
+    sidebarToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+};
+
+sidebarToggle?.addEventListener('click', () => {
+    setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+});
+
+sidebarCloseButtons.forEach((button) => {
+    button.addEventListener('click', () => setSidebarOpen(false));
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        setSidebarOpen(false);
+    }
+});
+
+window.addEventListener('resize', () => {
+    if (window.innerWidth >= 992) {
+        setSidebarOpen(false);
+    }
 });

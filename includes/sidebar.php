@@ -13,12 +13,24 @@ $activeOrganization = current_organization();
 $activeOrganizationCode = current_organization_code();
 $organizationOptions = organization_options();
 ?>
-<aside class="sidebar">
-    <div class="brand-block company-workspace-panel">
-        <div>
-            <div class="brand-title"><?= e((string) ($activeOrganization['label'] ?? APP_NAME)) ?></div>
-            <div class="text-soft small"><?= e((string) ($activeOrganization['tagline'] ?? APP_NAME)) ?></div>
-        </div>
+<aside class="sidebar" id="app-sidebar" aria-label="Primary navigation">
+    <div class="sidebar-brand-row">
+        <a class="sidebar-brand" href="<?= e(base_url('modules/dashboard.php')) ?>">
+            <span class="sidebar-brand-mark">
+                <img src="<?= e(base_url('assets/favicon.svg')) ?>" alt="">
+            </span>
+            <span>
+                <small><?= e((string) ($activeOrganization['label'] ?? 'PPE')) ?></small>
+                <strong><?= e(APP_NAME) ?></strong>
+            </span>
+        </a>
+        <button class="sidebar-close" type="button" data-sidebar-close aria-label="Close navigation">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <section class="brand-block company-workspace-panel sidebar-panel sidebar-company-panel">
+        <div class="sidebar-panel-label">Company Workspace</div>
         <div class="organization-switch organization-switch-sidebar">
             <?php foreach ($organizationOptions as $code => $organization): ?>
                 <a
@@ -30,39 +42,50 @@ $organizationOptions = organization_options();
                 </a>
             <?php endforeach; ?>
         </div>
-    </div>
+    </section>
 
-    <div class="sidebar-section">
-        <p class="nav-caption mb-0">Workspace</p>
-    </div>
-
-    <nav class="sidebar-nav">
-        <?php foreach ($navItems as $item): ?>
-            <?php $isActive = active_path($item['match']); ?>
-            <a class="sidebar-link <?= $isActive ? 'active' : '' ?>" href="<?= e(base_url($item['href'])) ?>">
-                <i class="bi <?= e($item['icon']) ?>"></i>
-                <span><?= e($item['label']) ?></span>
-            </a>
-        <?php endforeach; ?>
-    </nav>
+    <section class="sidebar-panel sidebar-workspace-panel">
+        <div class="sidebar-panel-label">Workspace</div>
+        <nav class="sidebar-nav">
+            <?php foreach ($navItems as $item): ?>
+                <?php $isActive = active_path($item['match']); ?>
+                <a class="sidebar-link <?= $isActive ? 'active' : '' ?>" href="<?= e(base_url($item['href'])) ?>" <?= $isActive ? 'aria-current="page"' : '' ?>>
+                    <i class="bi <?= e($item['icon']) ?>" aria-hidden="true"></i>
+                    <span><?= e($item['label']) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+    </section>
 
     <?php if (can_manage_assets()): ?>
         <div class="sidebar-action">
-            <p class="eyebrow mb-2">Quick action</p>
+            <div class="sidebar-panel-label">Quick Action</div>
             <a class="btn btn-primary w-100" href="<?= e(base_url('modules/add_asset.php')) ?>">
-                <i class="bi bi-plus-circle me-2"></i>Add Asset
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>Add Asset
             </a>
         </div>
     <?php endif; ?>
 
     <div class="sidebar-footer">
-        <a class="sidebar-link" href="<?= e(base_url('auth/logout.php')) ?>">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Logout</span>
-        </a>
-        <div class="sidebar-note">
-            <span>Today</span>
-            <strong><?= e(date('M d, Y')) ?></strong>
+        <div class="sidebar-theme-control">
+            <span class="sidebar-theme-label">Appearance</span>
+            <button class="theme-toggle theme-switch" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+                <span class="theme-switch-icon theme-switch-sun" aria-hidden="true"><i class="bi bi-sun"></i></span>
+                <span class="theme-switch-icon theme-switch-moon" aria-hidden="true"><i class="bi bi-moon-stars"></i></span>
+                <span class="theme-switch-thumb" aria-hidden="true"></span>
+                <span class="visually-hidden">Switch theme</span>
+            </button>
         </div>
+        <div class="sidebar-user">
+            <span class="user-avatar"><?= e((string) ($activeOrganization['short_label'] ?? 'PPE')) ?></span>
+            <span class="sidebar-user-copy">
+                <strong><?= e((string) ($activeOrganization['label'] ?? APP_NAME)) ?></strong>
+                <small>PPE workspace &middot; <?= e(date('M d, Y')) ?></small>
+            </span>
+        </div>
+        <a class="sidebar-launcher-link" href="/micei_mis/systems.php" title="Return to system launcher">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span>Back to Launcher</span>
+        </a>
     </div>
 </aside>

@@ -29,10 +29,10 @@ $activeOrganizationCode = current_organization_code();
                 const savedTheme = window.localStorage.getItem('ppe-theme');
                 const theme = savedTheme === 'light' || savedTheme === 'dark'
                     ? savedTheme
-                    : 'dark';
+                    : 'light';
                 document.documentElement.dataset.theme = theme;
             } catch (error) {
-                document.documentElement.dataset.theme = 'dark';
+                document.documentElement.dataset.theme = 'light';
             }
         })();
     </script>
@@ -51,20 +51,19 @@ $activeOrganizationCode = current_organization_code();
     <?php if ($showShell): ?>
         <div class="app-shell">
             <?php require APP_ROOT . '/includes/sidebar.php'; ?>
+            <button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Close navigation"></button>
             <div class="main-stage">
                 <header class="topbar">
+                    <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false">
+                        <i class="bi bi-list" aria-hidden="true"></i>
+                        <span class="visually-hidden">Open navigation</span>
+                    </button>
                     <div class="topbar-copy">
                         <p class="eyebrow mb-2"><?= e($activeOrganization['label']) ?> workspace</p>
                         <h1 class="page-title mb-1"><?= e($pageHeading) ?></h1>
                         <p class="page-description mb-0"><?= e($pageDescription) ?></p>
                         <div class="topbar-badges">
                         </div>
-                    </div>
-                    <div class="topbar-meta">
-                        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode" title="Switch to light mode">
-                            <i class="bi bi-sun-fill" data-theme-toggle-icon></i>
-                            <span data-theme-toggle-label>Light mode</span>
-                        </button>
                     </div>
                 </header>
                 <main class="content-stage">

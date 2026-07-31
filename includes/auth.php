@@ -27,7 +27,7 @@ function current_user(): ?array
         return normalize_auth_user($_SESSION['auth_user']);
     }
 
-    return null;
+    return default_user();
 }
 
 function is_logged_in(): bool
@@ -42,17 +42,6 @@ function login_user(array $user): void
     }
 
     $_SESSION['auth_user'] = normalize_auth_user($user);
-}
-
-function login_with_access_password(string $password): bool
-{
-    if (!hash_equals((string) APP_ACCESS_PASSWORD, $password)) {
-        return false;
-    }
-
-    login_user(default_user());
-
-    return true;
 }
 
 function logout_user(): void
@@ -79,10 +68,7 @@ function user_has_role(array|string $roles): bool
 
 function require_login(): void
 {
-    if (!is_logged_in()) {
-        set_flash('warning', 'Please log in to continue.');
-        redirect('auth/login.php');
-    }
+    // The application is intentionally available without a login screen.
 }
 
 function require_admin(): void

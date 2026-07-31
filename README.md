@@ -4,7 +4,7 @@
 
 ## Included
 
-- Login with a seeded `Admin` account
+- Direct access without a login screen
 - PPE asset register with add, edit, view, delete, and filtering
 - Automatic straight-line depreciation schedule generation
 - Dashboard, reports, and audit-style record checks
@@ -17,9 +17,6 @@
 1. Make sure Apache and MySQL are running in XAMPP.
 2. Import [db.sql](/c:/xampp/htdocs/ppe_lapsing/db.sql) into MySQL or phpMyAdmin.
 3. Open `http://localhost/ppe_lapsing/`.
-4. Sign in with the seeded admin account:
-
-- `admin@ppe.local` / `admin123`
 
 ## Optional environment setup
 
@@ -46,6 +43,5 @@ You can override defaults with these environment variables:
 ## Main entry points
 
 - [index.php](/c:/xampp/htdocs/ppe_lapsing/index.php)
-- [auth/login.php](/c:/xampp/htdocs/ppe_lapsing/auth/login.php)
 - [modules/dashboard.php](/c:/xampp/htdocs/ppe_lapsing/modules/dashboard.php)
 - [modules/assets.php](/c:/xampp/htdocs/ppe_lapsing/modules/assets.php)
