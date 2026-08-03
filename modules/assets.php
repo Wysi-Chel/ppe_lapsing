@@ -6,12 +6,6 @@ require_login();
 
 $pdo = db();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_asset_id']) && can_manage_assets()) {
-    delete_asset($pdo, (int) $_POST['delete_asset_id']);
-    set_flash('success', 'Asset deleted successfully.');
-    redirect('modules/assets.php');
-}
-
 $filters = [
     'q' => trim((string) request_value('q', '')),
     'status' => trim((string) request_value('status', '')),
@@ -68,11 +62,6 @@ require_once APP_ROOT . '/includes/header.php';
         </div>
         <div class="stack-inline">
             <span class="badge text-bg-dark"><?= e((string) $activeFilterCount) ?> active filter<?= $activeFilterCount === 1 ? '' : 's' ?></span>
-            <?php if (can_manage_assets()): ?>
-                <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
-                    <i class="bi bi-plus-circle me-2"></i>Add Asset
-                </a>
-            <?php endif; ?>
         </div>
     </div>
 
@@ -208,12 +197,6 @@ require_once APP_ROOT . '/includes/header.php';
                                         <a class="btn btn-sm btn-warning" href="<?= e(base_url('modules/edit_asset.php?asset_id=' . $asset['asset_id'])) ?>">
                                             <i class="bi bi-pencil-square me-1"></i>Edit
                                         </a>
-                                        <form method="post" class="d-inline">
-                                            <input type="hidden" name="delete_asset_id" value="<?= e((string) $asset['asset_id']) ?>">
-                                            <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm-delete="Delete this asset and its depreciation schedule?">
-                                                <i class="bi bi-trash me-1"></i>Delete
-                                            </button>
-                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </td>

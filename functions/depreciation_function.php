@@ -315,19 +315,6 @@ function save_asset(PDO $pdo, array $payload, ?int $assetId = null): int
     return $savedAssetId;
 }
 
-function delete_asset(PDO $pdo, int $assetId): void
-{
-    $statement = $pdo->prepare(
-        'DELETE FROM assets
-         WHERE asset_id = :asset_id
-           AND organization_code = :organization_code'
-    );
-    $statement->execute([
-        'asset_id' => $assetId,
-        'organization_code' => current_organization_code(),
-    ]);
-}
-
 function calculate_annual_depreciation(float $cost, int $usefulLife): float
 {
     if ($usefulLife <= 0 || $cost <= 0) {

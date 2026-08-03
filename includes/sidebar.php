@@ -20,8 +20,8 @@ $organizationOptions = organization_options();
                 <img src="<?= e(base_url('assets/favicon.svg')) ?>" alt="">
             </span>
             <span>
-                <small><?= e((string) ($activeOrganization['label'] ?? 'PPE')) ?></small>
-                <strong><?= e(APP_NAME) ?></strong>
+                <small>MICEI Portal</small>
+                <strong>PPE Lapsing</strong>
             </span>
         </a>
         <button class="sidebar-close" type="button" data-sidebar-close aria-label="Close navigation">
@@ -57,15 +57,6 @@ $organizationOptions = organization_options();
         </nav>
     </section>
 
-    <?php if (can_manage_assets()): ?>
-        <div class="sidebar-action">
-            <div class="sidebar-panel-label">Quick Action</div>
-            <a class="btn btn-primary w-100" href="<?= e(base_url('modules/add_asset.php')) ?>">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>Add Asset
-            </a>
-        </div>
-    <?php endif; ?>
-
     <div class="sidebar-footer">
         <div class="sidebar-theme-control">
             <span class="sidebar-theme-label">Appearance</span>
@@ -80,7 +71,7 @@ $organizationOptions = organization_options();
             <span class="user-avatar"><?= e((string) ($activeOrganization['short_label'] ?? 'PPE')) ?></span>
             <span class="sidebar-user-copy">
                 <strong><?= e((string) ($activeOrganization['label'] ?? APP_NAME)) ?></strong>
-                <small>PPE workspace &middot; <?= e(date('M d, Y')) ?></small>
+                <small>PPE workspace</small>
             </span>
         </div>
         <a class="sidebar-launcher-link" href="/micei_mis/systems.php" title="Return to system launcher">

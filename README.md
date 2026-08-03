@@ -5,7 +5,7 @@
 ## Included
 
 - Direct access without a login screen
-- PPE asset register with add, edit, view, delete, and filtering
+- PPE asset register with add, edit, view, and filtering
 - Automatic straight-line depreciation schedule generation
 - Dashboard, reports, and audit-style record checks
 - Asset transfer history with department and location updates

@@ -6,6 +6,7 @@ declare(strict_types=1);
                 </main>
                 <footer class="app-footer">
                     <span><?= e(APP_NAME . ' · ' . (string) ($activeOrganization['label'] ?? APP_NAME)) ?></span>
+                    <span>MICEI Information Technology Department</span>
                 </footer>
             </div>
         </div>

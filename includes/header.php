@@ -9,6 +9,11 @@ $loggedInUser = current_user();
 $showShell = $loggedInUser !== null;
 $activeOrganization = current_organization();
 $activeOrganizationCode = current_organization_code();
+$themeColor = $activeOrganizationCode === 'ntrprising' ? '#2d6fd6' : '#bf1f2f';
+$currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+$showAddAssetAction = $showShell
+    && can_manage_assets()
+    && !in_array($currentPage, ['add_asset.php', 'edit_asset.php'], true);
 ?>
 <!doctype html>
 <html lang="en" data-organization="<?= e($activeOrganizationCode) ?>">
@@ -16,13 +21,11 @@ $activeOrganizationCode = current_organization_code();
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($documentTitle) ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="<?= e(base_url('assets/favicon.svg')) ?>">
     <link rel="shortcut icon" href="<?= e(base_url('assets/favicon.svg')) ?>">
+    <meta name="theme-color" content="<?= e($themeColor) ?>">
     <script>
         (() => {
             try {
@@ -39,9 +42,6 @@ $activeOrganizationCode = current_organization_code();
     <link href="<?= e(base_url('assets/css/app.css')) ?>" rel="stylesheet">
 </head>
 <body class="<?= $showShell ? 'dashboard-body' : 'auth-body' ?>">
-    <div class="app-noise"></div>
-    <div class="orb orb-one"></div>
-    <div class="orb orb-two"></div>
     <?php if (!$showShell): ?>
         <button class="theme-toggle theme-toggle-floating" type="button" data-theme-toggle aria-label="Switch to light mode" title="Switch to light mode">
             <i class="bi bi-sun-fill" data-theme-toggle-icon></i>
@@ -54,16 +54,24 @@ $activeOrganizationCode = current_organization_code();
             <button class="sidebar-backdrop" type="button" data-sidebar-close aria-label="Close navigation"></button>
             <div class="main-stage">
                 <header class="topbar">
-                    <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false">
-                        <i class="bi bi-list" aria-hidden="true"></i>
-                        <span class="visually-hidden">Open navigation</span>
-                    </button>
                     <div class="topbar-copy">
                         <p class="eyebrow mb-2"><?= e($activeOrganization['label']) ?> workspace</p>
                         <h1 class="page-title mb-1"><?= e($pageHeading) ?></h1>
-                        <p class="page-description mb-0"><?= e($pageDescription) ?></p>
-                        <div class="topbar-badges">
-                        </div>
+                        <?php if ($pageDescription !== ''): ?>
+                            <p class="page-description mb-0"><?= e($pageDescription) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="topbar-actions">
+                        <button class="sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false">
+                            <i class="bi bi-list" aria-hidden="true"></i>
+                            <span>Menu</span>
+                        </button>
+                        <?php if ($showAddAssetAction): ?>
+                            <a class="btn btn-primary" href="<?= e(base_url('modules/add_asset.php')) ?>">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                                <span>Add asset</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </header>
                 <main class="content-stage">

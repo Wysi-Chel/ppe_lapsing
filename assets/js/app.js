@@ -1,13 +1,3 @@
-document.querySelectorAll('[data-confirm-delete]').forEach((button) => {
-    button.addEventListener('click', (event) => {
-        const message = button.getAttribute('data-confirm-delete') || 'Delete this record?';
-
-        if (!window.confirm(message)) {
-            event.preventDefault();
-        }
-    });
-});
-
 const assetCategorySelect = document.querySelector('[data-asset-category-select]');
 const departmentField = document.querySelector('[data-department-field]');
 const departmentSelect = document.querySelector('[data-department-select]');

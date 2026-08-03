@@ -13,6 +13,8 @@ $departmentFieldVisible = in_array((int) ($form['category_id'] ?? 0), $departmen
 <form method="post" class="stack-gap">
     <section class="field-section">
         <div>
+            <h3 class="field-section-title">Asset details</h3>
+            <p class="field-section-copy">Identify the item and where it is currently assigned.</p>
         </div>
         <div class="row g-3">
             <div class="col-md-6">
